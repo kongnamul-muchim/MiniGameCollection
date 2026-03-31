@@ -1,3 +1,5 @@
+using Core.Events;
+
 namespace Core.Interfaces;
 
 public interface IGameEventEmitter

@@ -1,3 +1,4 @@
+using Core.Events;
 using Core.Interfaces;
 using Xunit;
 
@@ -92,10 +93,15 @@ public class GameEventEmitterTests
         Assert.True(eventRaised);
     }
 
+    private class TestEvent : GameEvent
+    {
+        public TestEvent(string type) : base(type) { }
+    }
+
     private class MockGameEventEmitter : IGameEventEmitter
     {
         public event Action<GameEvent>? OnGameEvent;
-        public void RaiseEvent() => OnGameEvent?.Invoke(new GameEvent("test"));
+        public void RaiseEvent() => OnGameEvent?.Invoke(new TestEvent("test"));
     }
 }
 
