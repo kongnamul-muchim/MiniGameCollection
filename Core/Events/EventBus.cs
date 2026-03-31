@@ -1,20 +1,20 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Core.Events;
 
 public class EventBus : IEventBus
 {
-    private readonly Dictionary<System.Type, object> _handlers = new();
+    private readonly ConcurrentDictionary<System.Type, List<System.Delegate>> _handlers = new();
 
     public void Subscribe<T>(Action<T> handler) where T : GameEvent
     {
         var type = typeof(T);
-        if (!_handlers.TryGetValue(type, out var list))
+        var list = _handlers.GetOrAdd(type, _ => new List<System.Delegate>());
+        lock (list)
         {
-            list = new List<Action<T>>();
-            _handlers[type] = list;
+            list.Add(handler);
         }
-        ((List<Action<T>>)list).Add(handler);
     }
 
     public void Unsubscribe<T>(Action<T> handler) where T : GameEvent
@@ -22,22 +22,27 @@ public class EventBus : IEventBus
         var type = typeof(T);
         if (_handlers.TryGetValue(type, out var list))
         {
-            ((List<Action<T>>)list).Remove(handler);
+            lock (list)
+            {
+                list.Remove(handler);
+            }
         }
     }
 
     public void Publish<T>(T gameEvent) where T : GameEvent
     {
         var type = typeof(T);
-        if (!_handlers.TryGetValue(type, out var list))
+        if (_handlers.TryGetValue(type, out var list))
         {
-            return;
-        }
-        
-        var handlers = ((List<Action<T>>)list).ToArray();
-        foreach (var handler in handlers)
-        {
-            handler(gameEvent);
+            System.Delegate[] handlersCopy;
+            lock (list)
+            {
+                handlersCopy = list.ToArray();
+            }
+            foreach (var handler in handlersCopy)
+            {
+                (handler as Action<T>)?.Invoke(gameEvent);
+            }
         }
     }
 }
