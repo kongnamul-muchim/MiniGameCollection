@@ -51,11 +51,6 @@ public class PatternMemoryGame : IGame
 
     public void ResetGame()
     {
-        var currentState = _stateManager.CurrentState;
-        if (currentState == GameState.Playing)
-        {
-            _stateManager.ChangeState(GameState.Paused);
-        }
         _logic.ResetGame();
         _stateManager.ChangeState(GameState.Ready);
     }
