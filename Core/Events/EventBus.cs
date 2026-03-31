@@ -9,8 +9,15 @@ public class EventBus : IEventBus
 
     public void Subscribe<T>(Action<T> handler) where T : GameEvent
     {
+        if (handler == null)
+            return;
+
         var type = typeof(T);
-        var list = _handlers.GetOrAdd(type, _ => new List<System.Delegate>());
+        if (!_handlers.TryGetValue(type, out var list))
+        {
+            list = new List<System.Delegate>();
+            _handlers.TryAdd(type, list);
+        }
         lock (list)
         {
             list.Add(handler);
@@ -19,6 +26,9 @@ public class EventBus : IEventBus
 
     public void Unsubscribe<T>(Action<T> handler) where T : GameEvent
     {
+        if (handler == null)
+            return;
+
         var type = typeof(T);
         if (_handlers.TryGetValue(type, out var list))
         {
@@ -41,7 +51,13 @@ public class EventBus : IEventBus
             }
             foreach (var handler in handlersCopy)
             {
-                (handler as Action<T>)?.Invoke(gameEvent);
+                try
+                {
+                    (handler as Action<T>)?.Invoke(gameEvent);
+                }
+                catch
+                {
+                }
             }
         }
     }
