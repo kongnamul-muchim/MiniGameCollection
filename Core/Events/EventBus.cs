@@ -10,14 +10,10 @@ public class EventBus : IEventBus
     public void Subscribe<T>(Action<T> handler) where T : GameEvent
     {
         if (handler == null)
-            return;
+            throw new System.ArgumentNullException(nameof(handler));
 
         var type = typeof(T);
-        if (!_handlers.TryGetValue(type, out var list))
-        {
-            list = new List<System.Delegate>();
-            _handlers.TryAdd(type, list);
-        }
+        var list = _handlers.GetOrAdd(type, _ => new List<System.Delegate>());
         lock (list)
         {
             list.Add(handler);
@@ -41,6 +37,9 @@ public class EventBus : IEventBus
 
     public void Publish<T>(T gameEvent) where T : GameEvent
     {
+        if (gameEvent == null)
+            return;
+
         var type = typeof(T);
         if (_handlers.TryGetValue(type, out var list))
         {
