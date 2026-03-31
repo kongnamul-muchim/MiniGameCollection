@@ -129,3 +129,22 @@ public class GameTests
         public void DeserializeState(string json) { }
     }
 }
+
+public class GameStateInterfaceTests
+{
+    [Fact]
+    public void IGameState_ShouldHaveRequiredProperties()
+    {
+        var state = new MockGameState();
+        Assert.Equal(1, state.CurrentPlayer);
+        Assert.False(state.IsGameOver);
+        Assert.Null(state.Winner);
+    }
+
+    private class MockGameState : IGameState
+    {
+        public int CurrentPlayer => 1;
+        public bool IsGameOver => false;
+        public int? Winner => null;
+    }
+}
