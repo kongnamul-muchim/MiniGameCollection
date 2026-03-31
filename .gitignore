@@ -1,0 +1,20 @@
+# Worktrees
+.worktrees/
+
+# Build outputs
+bin/
+obj/
+*.dll
+*.exe
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Logs
+*.log
+
+# Test results
+TestResults/
