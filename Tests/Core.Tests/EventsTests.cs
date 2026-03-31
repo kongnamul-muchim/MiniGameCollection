@@ -63,3 +63,49 @@ public class GameStateChangedEventTests
         Assert.Equal(GameState.Playing, evt.NewState);
     }
 }
+
+public class EventBusTests
+{
+    [Fact]
+    public void EventBus_ShouldPublishAndSubscribe()
+    {
+        var bus = new EventBus();
+        var received = false;
+        int? receivedScore = null;
+        
+        bus.Subscribe<ScoreChangedEvent>(e => 
+        {
+            received = true;
+            receivedScore = e.NewScore;
+        });
+        
+        bus.Publish(new ScoreChangedEvent(100, 10));
+        
+        Assert.True(received);
+        Assert.Equal(100, receivedScore);
+    }
+
+    [Fact]
+    public void EventBus_ShouldUnsubscribe()
+    {
+        var bus = new EventBus();
+        var count = 0;
+        
+        Action<ScoreChangedEvent> handler = e => count++;
+        
+        bus.Subscribe(handler);
+        bus.Publish(new ScoreChangedEvent(100, 10));
+        Assert.Equal(1, count);
+        
+        bus.Unsubscribe(handler);
+        bus.Publish(new ScoreChangedEvent(100, 10));
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public void EventBus_ShouldNotThrowWhenNoSubscribers()
+    {
+        var bus = new EventBus();
+        bus.Publish(new ScoreChangedEvent(100, 10));
+    }
+}
