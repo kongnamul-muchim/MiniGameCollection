@@ -16,3 +16,116 @@ public class GameStateTests
         Assert.Equal(5, (int)GameState.Victory);
     }
 }
+
+public class GameInfoTests
+{
+    [Fact]
+    public void IGameInfo_ShouldHaveRequiredProperties()
+    {
+        var gameInfo = new MockGameInfo();
+        Assert.NotNull(gameInfo.GameName);
+        Assert.NotNull(gameInfo.GameDescription);
+    }
+
+    private class MockGameInfo : IGameInfo
+    {
+        public string GameName => "Test";
+        public string GameDescription => "Test Description";
+    }
+}
+
+public class GameControllableTests
+{
+    [Fact]
+    public void IGameControllable_ShouldHaveRequiredMembers()
+    {
+        var game = new MockGameControllable();
+        Assert.Equal(GameState.None, game.CurrentState);
+        Assert.False(game.IsPlaying);
+        Assert.False(game.IsPaused);
+        
+        game.StartGame();
+        Assert.Equal(GameState.Playing, game.CurrentState);
+    }
+
+    private class MockGameControllable : IGameControllable
+    {
+        public GameState CurrentState { get; private set; } = GameState.None;
+        public bool IsPlaying => CurrentState == GameState.Playing;
+        public bool IsPaused => CurrentState == GameState.Paused;
+        
+        public void StartGame() => CurrentState = GameState.Playing;
+        public void PauseGame() => CurrentState = GameState.Paused;
+        public void ResumeGame() => CurrentState = GameState.Playing;
+        public void ResetGame() => CurrentState = GameState.Ready;
+        public void EndGame() => CurrentState = GameState.GameOver;
+    }
+}
+
+public class GameSerializableTests
+{
+    [Fact]
+    public void IGameSerializable_ShouldHaveRequiredMethods()
+    {
+        var serializable = new MockGameSerializable();
+        var json = serializable.SerializeState();
+        Assert.NotNull(json);
+        serializable.DeserializeState(json);
+    }
+
+    private class MockGameSerializable : IGameSerializable
+    {
+        public string SerializeState() => "{}";
+        public void DeserializeState(string json) { }
+    }
+}
+
+public class GameEventEmitterTests
+{
+    [Fact]
+    public void IGameEventEmitter_ShouldHaveEvent()
+    {
+        var emitter = new MockGameEventEmitter();
+        var eventRaised = false;
+        emitter.OnGameEvent += (e) => eventRaised = true;
+        emitter.RaiseEvent();
+        Assert.True(eventRaised);
+    }
+
+    private class MockGameEventEmitter : IGameEventEmitter
+    {
+        public event Action<GameEvent>? OnGameEvent;
+        public void RaiseEvent() => OnGameEvent?.Invoke(new GameEvent("test"));
+    }
+}
+
+public class GameTests
+{
+    [Fact]
+    public void IGame_ShouldCombineAllInterfaces()
+    {
+        var game = new MockGame();
+        Assert.NotNull(game.GameName);
+        Assert.Equal(GameState.None, game.CurrentState);
+        Assert.NotNull(game.SerializeState());
+    }
+
+    private class MockGame : IGame
+    {
+        public string GameName => "Test Game";
+        public string GameDescription => "A test game";
+        public GameState CurrentState { get; private set; } = GameState.None;
+        public bool IsPlaying => CurrentState == GameState.Playing;
+        public bool IsPaused => CurrentState == GameState.Paused;
+        
+        public event Action<GameEvent>? OnGameEvent;
+        
+        public void StartGame() => CurrentState = GameState.Playing;
+        public void PauseGame() => CurrentState = GameState.Paused;
+        public void ResumeGame() => CurrentState = GameState.Playing;
+        public void ResetGame() => CurrentState = GameState.Ready;
+        public void EndGame() => CurrentState = GameState.GameOver;
+        public string SerializeState() => "{}";
+        public void DeserializeState(string json) { }
+    }
+}
