@@ -11,13 +11,13 @@ public class SudokuGenerator : ISudokuGenerator
     
     public int[,] GeneratePuzzle(int difficulty)
     {
-        // Create a valid completed board pattern
-        var puzzle = GenerateBasePattern();
+        // Create a valid completed board
+        var solved = GenerateSolvedBoard();
         
         // Remove cells based on difficulty
         int cellsToRemove = difficulty switch
         {
-            1 => 35, // Easy - 44 given
+            1 => 35, // Easy - 46 given
             2 => 45, // Medium - 36 given
             3 => 55, // Hard - 26 given
             _ => 35
@@ -36,65 +36,33 @@ public class SudokuGenerator : ISudokuGenerator
         for (int i = 0; i < cellsToRemove && i < positions.Count; i++)
         {
             var (r, c) = positions[i];
-            puzzle[r, c] = 0;
+            solved[r, c] = 0;
         }
         
-        return puzzle;
+        return solved;
     }
     
-    private int[,] GenerateBasePattern()
+    private int[,] GenerateSolvedBoard()
     {
-        // Use a valid Sudoku pattern (rotated/shuffled)
-        var baseGrid = new int[,]
-        {
-            {1,2,3,4,5,6,7,8,9},
-            {4,5,6,7,8,9,1,2,3},
-            {7,8,9,1,2,3,4,5,6},
-            {2,3,4,5,6,7,8,9,1},
-            {5,6,7,8,9,1,2,3,4},
-            {8,9,1,2,3,4,5,6,7},
-            {3,4,5,6,7,8,9,1,2},
-            {6,7,8,9,1,2,3,4,5},
-            {9,1,2,3,4,5,6,7,8}
-        };
-        
-        // Apply transformations
+        // Use a simple valid base pattern with number substitution
+        // Base pattern: each row shifts by 3 from the previous row
         var result = new int[9, 9];
         
-        // Shuffle rows within each 3x3 box
-        for (int box = 0; box < 3; box++)
+        for (int r = 0; r < 9; r++)
         {
-            var rows = new[] { box * 3, box * 3 + 1, box * 3 + 2 };
-            ShuffleArray(rows);
-            
-            for (int i = 0; i < 3; i++)
+            for (int c = 0; c < 9; c++)
             {
-                for (int c = 0; c < 9; c++)
-                    result[rows[i], c] = baseGrid[box * 3 + i, c];
+                // Valid pattern formula
+                result[r, c] = ((r * 3) + (r / 3) + c) % 9 + 1;
             }
         }
         
-        // Shuffle columns within each 3x3 box
-        for (int c = 0; c < 9; c++)
-        {
-            var temp = new int[9];
-            for (int r = 0; r < 9; r++)
-                temp[r] = result[r, c];
-            
-            // Shuffle columns in groups of 3
-            for (int box = 0; box < 3; box++)
-            {
-                var cols = new[] { box * 3, box * 3 + 1, box * 3 + 2 };
-                ShuffleArray(cols);
-            }
-        }
-        
-        // Shuffle numbers (e.g., swap all 1s with all 2s)
-        var numberMap = new int[10];
+        // Shuffle digits only (simpler and safer)
         var numbers = Enumerable.Range(1, 9).ToList();
         Shuffle(numbers);
+        var numberMap = new int[10];
         for (int i = 0; i < 9; i++)
-            numberMap[numbers[i]] = i + 1;
+            numberMap[i + 1] = numbers[i];
         
         for (int r = 0; r < 9; r++)
             for (int c = 0; c < 9; c++)
@@ -109,15 +77,6 @@ public class SudokuGenerator : ISudokuGenerator
         {
             int j = _random.Next(i + 1);
             (list[i], list[j]) = (list[j], list[i]);
-        }
-    }
-    
-    private void ShuffleArray<T>(T[] array)
-    {
-        for (int i = array.Length - 1; i > 0; i--)
-        {
-            int j = _random.Next(i + 1);
-            (array[i], array[j]) = (array[j], array[i]);
         }
     }
 }

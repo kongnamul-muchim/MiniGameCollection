@@ -11,6 +11,7 @@ public class DefaultStateTransitionRule : IStateTransitionRule
         (GameState.Playing, GameState.Paused),
         (GameState.Playing, GameState.GameOver),
         (GameState.Playing, GameState.Victory),
+        (GameState.Playing, GameState.Ready),
         (GameState.Paused, GameState.Playing),
         (GameState.Paused, GameState.Ready),
         (GameState.GameOver, GameState.Ready),
