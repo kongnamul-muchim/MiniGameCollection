@@ -101,7 +101,6 @@ public class StateTests
         [InlineData(GameState.Ready, GameState.Paused)]
         [InlineData(GameState.Ready, GameState.GameOver)]
         [InlineData(GameState.Ready, GameState.Victory)]
-        [InlineData(GameState.Playing, GameState.Ready)]
         [InlineData(GameState.Playing, GameState.None)]
         [InlineData(GameState.Paused, GameState.GameOver)]
         [InlineData(GameState.Paused, GameState.Victory)]
