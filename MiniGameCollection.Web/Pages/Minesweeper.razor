@@ -1,0 +1,35 @@
+@page "/minesweeper"
+@inject IGameStateService GameService
+@implements IDisposable
+
+<PageTitle>Minesweeper</PageTitle>
+
+<h1>Minesweeper</h1>
+
+<div class="game-container">
+    <p>Minesweeper game page - Implementation in progress</p>
+    
+    <div class="game-controls">
+        <button class="btn btn-primary" @onclick="StartNewGame">New Game</button>
+    </div>
+    
+    <div class="minesweeper-board-placeholder">
+        <p>Minesweeper board will be rendered here</p>
+    </div>
+</div>
+
+@code {
+    private MinesweeperGame? game;
+    
+    protected override void OnInitialized()
+    {
+        // TODO: Initialize game properly
+    }
+    
+    private void StartNewGame()
+    {
+        // TODO: Start new game
+    }
+    
+    public void Dispose() { }
+}

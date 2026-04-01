@@ -1,0 +1,35 @@
+@page "/gomoku"
+@inject IGameStateService GameService
+@implements IDisposable
+
+<PageTitle>Gomoku</PageTitle>
+
+<h1>Gomoku</h1>
+
+<div class="game-container">
+    <p>Gomoku game page - Implementation in progress</p>
+    
+    <div class="game-controls">
+        <button class="btn btn-primary" @onclick="StartGame">Start Game</button>
+    </div>
+    
+    <div class="gomoku-board-placeholder">
+        <p>Gomoku board will be rendered here</p>
+    </div>
+</div>
+
+@code {
+    private GomokuGame? game;
+    
+    protected override void OnInitialized()
+    {
+        // TODO: Initialize game properly
+    }
+    
+    private void StartGame()
+    {
+        // TODO: Start game
+    }
+    
+    public void Dispose() { }
+}

@@ -1,0 +1,42 @@
+@page "/"
+@inject NavigationManager Navigation
+
+<PageTitle>Mini Game Collection</PageTitle>
+
+<h1>Mini Game Collection</h1>
+
+<div class="game-grid">
+    @foreach (var game in _games)
+    {
+        <div class="game-card" @onclick="@(() => NavigateToGame(game.Url))">
+            <div class="game-card-icon">@game.Icon</div>
+            <h3>@game.Name</h3>
+            <p>@game.Description</p>
+        </div>
+    }
+</div>
+
+@code {
+    private readonly List<GameInfo> _games = new()
+    {
+        new GameInfo { Name = "Pattern Memory", Description = "Memorize and reproduce growing number sequences", Icon = "🎨", Url = "/pattern-memory" },
+        new GameInfo { Name = "Sudoku", Description = "Classic number puzzle game", Icon = "🔢", Url = "/sudoku" },
+        new GameInfo { Name = "Minesweeper", Description = "Find mines without exploding", Icon = "💣", Url = "/minesweeper" },
+        new GameInfo { Name = "Tetris", Description = "Stack falling blocks", Icon = "🧱", Url = "/tetris" },
+        new GameInfo { Name = "Gomoku", Description = "Five in a row strategy game", Icon = "⚫", Url = "/gomoku" },
+        new GameInfo { Name = "Chess", Description = "Classic strategy chess", Icon = "♟️", Url = "/chess" }
+    };
+    
+    private void NavigateToGame(string url)
+    {
+        Navigation.NavigateTo(url);
+    }
+    
+    private class GameInfo
+    {
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public string Url { get; set; } = "";
+    }
+}

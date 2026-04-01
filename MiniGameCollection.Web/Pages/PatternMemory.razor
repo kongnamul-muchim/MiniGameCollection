@@ -1,0 +1,126 @@
+@page "/pattern-memory"
+@inject IGameStateService GameService
+@implements IDisposable
+
+<PageTitle>Pattern Memory</PageTitle>
+
+<h1>Pattern Memory</h1>
+
+@if (game is PatternMemoryGame)
+{
+    <div class="game-container">
+        <div class="game-info">
+            <span>Level: @currentLevel</span>
+            <span>Score: @currentScore</span>
+        </div>
+        
+        <div class="pattern-grid">
+            @for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    var index = i * 3 + j;
+                    <button class="pattern-tile @(IsHighlighted(index) ? "highlighted" : "")"
+                            @onclick="@(() => HandleTileClick(index))"
+                            disabled="@(isShowingPattern || !game.IsPlaying)">
+                    </button>
+                }
+            }
+        </div>
+        
+        <div class="game-controls">
+            @if (!game.IsPlaying)
+            {
+                <button class="btn btn-primary" @onclick="StartGame">Start Game</button>
+            }
+            else
+            {
+                <button class="btn btn-secondary" @onclick="TogglePause">@(_isPaused ? "Resume" : "Pause")</button>
+                <button class="btn btn-danger" @onclick="ResetGame">Reset</button>
+            }
+        </div>
+        
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="game-message">@message</div>
+        }
+    </div>
+}
+else
+{
+    <p>Loading game...</p>
+}
+
+@code {
+    private PatternMemoryGame? game;
+    private int currentLevel = 1;
+    private int currentScore = 0;
+    private bool isShowingPattern = false;
+    private bool _isPaused = false;
+    private string? message;
+    private List<int> currentPattern = new();
+    private int playerStep = 0;
+    
+    protected override void OnInitialized()
+    {
+        var generator = new PatternGenerator(new Random());
+        var logic = new PatternMemoryLogic(generator);
+        game = new PatternMemoryGame(logic);
+        GameService.StartGame(game);
+        GameService.OnStateChanged += HandleStateChanged;
+    }
+    
+    private void HandleStateChanged()
+    {
+        if (game != null)
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+    
+    private void StartGame()
+    {
+        game?.StartGame();
+        message = "Watch the pattern...";
+        StateHasChanged();
+    }
+    
+    private void TogglePause()
+    {
+        if (_isPaused)
+            game?.ResumeGame();
+        else
+            game?.PauseGame();
+        
+        _isPaused = !_isPaused;
+        StateHasChanged();
+    }
+    
+    private void ResetGame()
+    {
+        game?.ResetGame();
+        currentLevel = 1;
+        currentScore = 0;
+        message = null;
+        StateHasChanged();
+    }
+    
+    private bool IsHighlighted(int index)
+    {
+        return currentPattern.Contains(index);
+    }
+    
+    private void HandleTileClick(int index)
+    {
+        if (isShowingPattern || !game.IsPlaying) return;
+        
+        // TODO: Implement pattern matching logic
+        playerStep++;
+        StateHasChanged();
+    }
+    
+    public void Dispose()
+    {
+        GameService.OnStateChanged -= HandleStateChanged;
+    }
+}

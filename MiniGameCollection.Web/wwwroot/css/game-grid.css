@@ -1,0 +1,58 @@
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.game-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: white;
+    text-align: center;
+}
+
+.game-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.game-card-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.game-card h3 {
+    margin: 0.5rem 0;
+    font-size: 1.25rem;
+}
+
+.game-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .game-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    
+    .game-card-icon {
+        font-size: 2rem;
+    }
+    
+    .game-card h3 {
+        font-size: 1rem;
+    }
+    
+    .game-card p {
+        font-size: 0.8rem;
+    }
+}

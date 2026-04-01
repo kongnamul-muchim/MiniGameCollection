@@ -1,0 +1,369 @@
+/* Game Container */
+.game-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.game-info {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.game-controls {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.game-message {
+    text-align: center;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #f0f0f0;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+/* Sudoku Styles */
+.sudoku-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 1rem auto;
+    max-width: 450px;
+    border: 3px solid #333;
+}
+
+.sudoku-row {
+    display: flex;
+}
+
+.sudoku-cell {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.sudoku-cell.fixed {
+    background: #f9f9f9;
+    color: #333;
+}
+
+.sudoku-cell:not(.fixed) {
+    background: #fff;
+    color: #0071c1;
+}
+
+.sudoku-cell.selected {
+    background: #ffe066 !important;
+}
+
+.sudoku-cell.border-bottom {
+    border-bottom: 3px solid #333;
+}
+
+.sudoku-cell.border-right {
+    border-right: 3px solid #333;
+}
+
+.number-pad {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 400px;
+    margin: 1rem auto;
+}
+
+.number-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+}
+
+.number-btn:hover {
+    background: #f0f0f0;
+}
+
+.number-btn-clear {
+    background: #ffe066;
+}
+
+/* Minesweeper Styles */
+.minesweeper-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1rem auto;
+    border: 4px solid #888;
+    background: #ccc;
+}
+
+.minesweeper-row {
+    display: flex;
+}
+
+.minesweeper-cell {
+    width: 30px;
+    height: 30px;
+    border: 2px outset #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    background: #ccc;
+}
+
+.minesweeper-cell.revealed {
+    border: 1px solid #888;
+    background: #ddd;
+}
+
+.minesweeper-cell.flagged {
+    background: #ccc;
+}
+
+.minesweeper-cell:hover:not(.revealed) {
+    background: #ddd;
+}
+
+.count-1 { color: blue; }
+.count-2 { color: green; }
+.count-3 { color: red; }
+.count-4 { color: darkblue; }
+.count-5 { color: darkred; }
+.count-6 { color: teal; }
+.count-7 { color: black; }
+.count-8 { color: gray; }
+
+/* Tetris Styles */
+.tetris-container {
+    max-width: 500px;
+}
+
+.tetris-layout {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.tetris-board {
+    display: grid;
+    grid-template-rows: repeat(20, 1fr);
+    grid-template-columns: repeat(10, 1fr);
+    border: 2px solid #333;
+    background: #111;
+    width: 200px;
+    height: 400px;
+}
+
+.tetris-row {
+    display: contents;
+}
+
+.tetris-cell {
+    border: 1px solid #333;
+}
+
+.tetris-cell.current-piece {
+    background: #ff0;
+    border-color: #cc0;
+}
+
+.piece-I { background: cyan; }
+.piece-O { background: yellow; }
+.piece-T { background: purple; }
+.piece-S { background: green; }
+.piece-Z { background: red; }
+.piece-J { background: blue; }
+.piece-L { background: orange; }
+
+.tetris-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 100px;
+}
+
+.next-piece {
+    border: 2px solid #333;
+    padding: 0.5rem;
+    background: #111;
+}
+
+.next-piece-display {
+    width: 80px;
+    height: 80px;
+}
+
+.mobile-controls {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.mobile-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+    border: none;
+    border-radius: 8px;
+    background: #667eea;
+    color: white;
+    cursor: pointer;
+}
+
+.mobile-btn:active {
+    background: #764ba2;
+}
+
+/* Gomoku Styles */
+.gomoku-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1rem auto;
+    background: #dcb35c;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.gomoku-row {
+    display: flex;
+}
+
+.gomoku-cell {
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+}
+
+.gomoku-cell::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background: #333;
+}
+
+.gomoku-cell::after {
+    content: '';
+    position: absolute;
+    height: 100%;
+    width: 1px;
+    background: #333;
+}
+
+.stone {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.stone-black {
+    background: #000;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.stone-white {
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.gomoku-cell.last-move {
+    background: rgba(0, 255, 0, 0.3);
+}
+
+/* Chess Styles */
+.chess-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1rem auto;
+    border: 4px solid #8b4513;
+    width: fit-content;
+}
+
+.chess-row {
+    display: flex;
+}
+
+.chess-cell {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 2rem;
+}
+
+.chess-cell.light {
+    background: #f0d9b5;
+}
+
+.chess-cell.dark {
+    background: #b58863;
+}
+
+.chess-cell.selected {
+    background: #7fc97f !important;
+}
+
+.chess-cell.last-move {
+    background: #aaa23a;
+}
+
+.chess-piece {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sudoku-cell {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    .chess-cell {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
+    
+    .gomoku-cell {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .tetris-layout {
+        flex-direction: column;
+        align-items: center;
+    }
+}

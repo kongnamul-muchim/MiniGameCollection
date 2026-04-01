@@ -1,0 +1,35 @@
+@page "/sudoku"
+@inject IGameStateService GameService
+@implements IDisposable
+
+<PageTitle>Sudoku</PageTitle>
+
+<h1>Sudoku</h1>
+
+<div class="game-container">
+    <p>Sudoku game page - Implementation in progress</p>
+    
+    <div class="game-controls">
+        <button class="btn btn-primary" @onclick="StartNewGame">New Game</button>
+    </div>
+    
+    <div class="sudoku-board-placeholder">
+        <p>9x9 Sudoku board will be rendered here</p>
+    </div>
+</div>
+
+@code {
+    private SudokuGame? game;
+    
+    protected override void OnInitialized()
+    {
+        // TODO: Initialize game properly
+    }
+    
+    private void StartNewGame()
+    {
+        // TODO: Start new game
+    }
+    
+    public void Dispose() { }
+}

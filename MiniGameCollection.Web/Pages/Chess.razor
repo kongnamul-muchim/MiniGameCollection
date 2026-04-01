@@ -1,0 +1,35 @@
+@page "/chess"
+@inject IGameStateService GameService
+@implements IDisposable
+
+<PageTitle>Chess</PageTitle>
+
+<h1>Chess</h1>
+
+<div class="game-container">
+    <p>Chess game page - Implementation in progress</p>
+    
+    <div class="game-controls">
+        <button class="btn btn-primary" @onclick="StartGame">Start Game</button>
+    </div>
+    
+    <div class="chess-board-placeholder">
+        <p>Chess board will be rendered here</p>
+    </div>
+</div>
+
+@code {
+    private ChessGame? game;
+    
+    protected override void OnInitialized()
+    {
+        // TODO: Initialize game properly
+    }
+    
+    private void StartGame()
+    {
+        // TODO: Start game
+    }
+    
+    public void Dispose() { }
+}
