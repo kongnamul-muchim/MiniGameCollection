@@ -19,6 +19,15 @@ public class TetrisGame : IGame
     public bool IsPaused => _stateManager.CurrentState == GameState.Paused;
 
     public event Action<GameEvent>? OnGameEvent;
+    
+    // Expose logic and board for web UI
+    public TetrisLogic Logic => _logic;
+    public Models.TetrisBoard? Board => _logic.Board;
+    public Models.Tetromino? CurrentPiece => _logic.CurrentPiece;
+    public Models.Tetromino? NextPiece => _logic.NextPiece;
+    public int Score => _logic.GetScore();
+    public int Level => _logic.GetLevel();
+    public int LinesCleared => _logic.GetLinesCleared();
 
     public TetrisGame(TetrisLogic logic)
     {
@@ -51,8 +60,16 @@ public class TetrisGame : IGame
 
     public void ResetGame()
     {
+        _logic.StartGame();
         _stateManager.ChangeState(GameState.Ready);
     }
+    
+    public bool MoveLeft() => _logic.MoveLeft();
+    public bool MoveRight() => _logic.MoveRight();
+    public bool MoveDown() => _logic.MoveDown();
+    public bool Rotate() => _logic.Rotate();
+    
+    public void Tick() => _logic.MoveDown();
 
     public void EndGame()
     {

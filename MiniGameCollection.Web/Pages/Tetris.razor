@@ -6,30 +6,187 @@
 
 <h1>Tetris</h1>
 
-<div class="game-container">
-    <p>Tetris game page - Implementation in progress</p>
-    
-    <div class="game-controls">
-        <button class="btn btn-primary" @onclick="StartGame">Start Game</button>
+@if (game != null)
+{
+    <div class="game-container tetris-container">
+        <div class="tetris-layout">
+            <div class="tetris-board" @ref="boardElement" tabindex="0">
+                @for (int r = 0; r < 20; r++)
+                {
+                    <div class="tetris-row">
+                        @for (int c = 0; c < 10; c++)
+                        {
+                            var cellColor = game.Board?.GetCell(r, c) ?? 0;
+                            var isCurrentPiece = game.CurrentPiece?.Shape != null && 
+                                r >= game.CurrentPiece.Row && r < game.CurrentPiece.Row + game.CurrentPiece.Shape.GetLength(0) &&
+                                c >= game.CurrentPiece.Column && c < game.CurrentPiece.Column + game.CurrentPiece.Shape.GetLength(1) &&
+                                game.CurrentPiece.Shape[r - game.CurrentPiece.Row, c - game.CurrentPiece.Column] == 1;
+                            
+                            <div class="tetris-cell @(isCurrentPiece ? "current-piece" : "") @(cellColor > 0 ? $"piece-{cellColor}" : "")"></div>
+                        }
+                    </div>
+                }
+            </div>
+            
+            <div class="tetris-sidebar">
+                <div class="next-piece">
+                    <h3>Next</h3>
+                    <div class="next-piece-display">
+                        @if (game.NextPiece != null)
+                        {
+                            <div class="mini-board">
+                                @for (int r = 0; r < 4; r++)
+                                {
+                                    <div class="mini-row">
+                                        @for (int c = 0; c < 4; c++)
+                                        {
+                                            var val = game.NextPiece.Shape[r, c];
+                                            <div class="mini-cell @(val > 0 ? $"piece-{val}" : "")"></div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+                
+                <div class="game-info">
+                    <div>Score: @game.Score</div>
+                    <div>Level: @game.Level</div>
+                    <div>Lines: @game.LinesCleared</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-controls">
+            @if (!game.IsPlaying)
+            {
+                <button class="btn btn-primary" @onclick="StartGame">Start Game</button>
+            }
+            else
+            {
+                <button class="btn btn-secondary" @onclick="TogglePause">@(_isPaused ? "Resume" : "Pause")</button>
+                <button class="btn btn-danger" @onclick="ResetGame">Reset</button>
+            }
+        </div>
+        
+        <div class="mobile-controls">
+            <button class="mobile-btn" @onclick="MoveLeft">◀</button>
+            <button class="mobile-btn" @onclick="Rotate">↻</button>
+            <button class="mobile-btn" @onclick="MoveRight">▶</button>
+            <button class="mobile-btn" @onclick="SoftDrop">▼</button>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="game-message">@message</div>
+        }
     </div>
-    
-    <div class="tetris-board-placeholder">
-        <p>Tetris board will be rendered here</p>
-    </div>
-</div>
+}
+else
+{
+    <p>Loading game...</p>
+}
 
 @code {
     private TetrisGame? game;
+    private ElementReference boardElement;
+    private bool _isPaused = false;
+    private string? message;
+    private System.Timers.Timer? gameLoop;
     
     protected override void OnInitialized()
     {
-        // TODO: Initialize game properly
+        var generator = new Tetris.Logic.TetrominoGenerator();
+        var checker = new Tetris.Logic.CollisionChecker();
+        var clearer = new Tetris.Logic.LineClearer();
+        var logic = new Tetris.Logic.TetrisLogic(generator, checker, clearer);
+        game = new TetrisGame(logic);
+        GameService.StartGame(game);
+        GameService.OnStateChanged += HandleStateChanged;
+    }
+    
+    private void HandleStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _ = Task.Run(async () =>
+            {
+                while (true)
+                {
+                    if (game?.IsPlaying == true && _isPaused == false)
+                    {
+                        await InvokeAsync(() => {
+                            game?.Tick();
+                            StateHasChanged();
+                        });
+                    }
+                    await Task.Delay(1000 / (game?.Level ?? 1));
+                }
+            });
+        }
+        await base.OnAfterRenderAsync(firstRender);
     }
     
     private void StartGame()
     {
-        // TODO: Start game
+        game?.StartGame();
+        message = null;
+        _isPaused = false;
+        StateHasChanged();
     }
     
-    public void Dispose() { }
+    private void TogglePause()
+    {
+        if (_isPaused)
+            game?.ResumeGame();
+        else
+            game?.PauseGame();
+        
+        _isPaused = !_isPaused;
+        StateHasChanged();
+    }
+    
+    private void ResetGame()
+    {
+        game?.ResetGame();
+        message = null;
+        _isPaused = false;
+        StateHasChanged();
+    }
+    
+    private void MoveLeft()
+    {
+        game?.MoveLeft();
+        StateHasChanged();
+    }
+    
+    private void MoveRight()
+    {
+        game?.MoveRight();
+        StateHasChanged();
+    }
+    
+    private void SoftDrop()
+    {
+        game?.MoveDown();
+        StateHasChanged();
+    }
+    
+    private void Rotate()
+    {
+        game?.Rotate();
+        StateHasChanged();
+    }
+    
+    public void Dispose()
+    {
+        gameLoop?.Dispose();
+        GameService.OnStateChanged -= HandleStateChanged;
+    }
 }

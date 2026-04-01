@@ -6,30 +6,141 @@
 
 <h1>Minesweeper</h1>
 
-<div class="game-container">
-    <p>Minesweeper game page - Implementation in progress</p>
-    
-    <div class="game-controls">
-        <button class="btn btn-primary" @onclick="StartNewGame">New Game</button>
+@if (game != null)
+{
+    <div class="game-container">
+        <div class="game-info">
+            <span>Mines: @game.MineCount</span>
+            <span>Revealed: @game.RevealedCount</span>
+        </div>
+        
+        <div class="minesweeper-board">
+            @for (int r = 0; r < game.Rows; r++)
+            {
+                <div class="minesweeper-row">
+                    @for (int c = 0; c < game.Columns; c++)
+                    {
+                        var cell = game.GetCell(r, c);
+                        var isRevealed = cell?.IsRevealed ?? false;
+                        var isFlagged = cell?.IsFlagged ?? false;
+                        var isMine = cell?.IsMine ?? false;
+                        var adjacent = cell?.AdjacentMines ?? 0;
+                        
+                        <div class="minesweeper-cell @(isRevealed ? "revealed" : "") @(isFlagged ? "flagged" : "")"
+                             @onclick="@(() => HandleLeftClick(r, c))"
+                             @oncontextmenu="@(() => HandleRightClick(r, c))">
+                            @if (isRevealed)
+                            {
+                                @if (isMine)
+                                {
+                                    <span class="mine">💣</span>
+                                }
+                                else if (adjacent > 0)
+                                {
+                                    <span class="count-@adjacent">@adjacent</span>
+                                }
+                            }
+                            else if (isFlagged)
+                            {
+                                <span class="flag">🚩</span>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        
+        <div class="game-controls">
+            @if (!game.IsPlaying)
+            {
+                <button class="btn btn-primary" @onclick="StartNewGame">New Game</button>
+            }
+            else
+            {
+                <button class="btn btn-secondary" @onclick="TogglePause">@(_isPaused ? "Resume" : "Pause")</button>
+                <button class="btn btn-danger" @onclick="ResetGame">Reset</button>
+            }
+        </div>
+        
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="game-message">@message</div>
+        }
     </div>
-    
-    <div class="minesweeper-board-placeholder">
-        <p>Minesweeper board will be rendered here</p>
-    </div>
-</div>
+}
+else
+{
+    <p>Loading game...</p>
+}
 
 @code {
     private MinesweeperGame? game;
+    private bool _isPaused = false;
+    private string? message;
     
     protected override void OnInitialized()
     {
-        // TODO: Initialize game properly
+        var generator = new Minesweeper.Logic.BoardGenerator();
+        var revealer = new Minesweeper.Logic.CellRevealer();
+        var logic = new Minesweeper.Logic.MinesweeperLogic(generator, revealer);
+        game = new MinesweeperGame(logic);
+        GameService.StartGame(game);
+        GameService.OnStateChanged += HandleStateChanged;
+    }
+    
+    private void HandleStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+    
+    private void HandleLeftClick(int row, int col)
+    {
+        if (!game?.IsPlaying ?? true || _isPaused) return;
+        game.RevealCell(row, col);
+        StateHasChanged();
+    }
+    
+    private bool HandleRightClick(int row, int col)
+    {
+        if (!game?.IsPlaying ?? true || _isPaused) return false;
+        game.ToggleFlag(row, col);
+        StateHasChanged();
+        return true;
     }
     
     private void StartNewGame()
     {
-        // TODO: Start new game
+        game?.NewGame(9, 9, 10);
+        message = null;
+        _isPaused = false;
+        StateHasChanged();
     }
     
-    public void Dispose() { }
+    private void TogglePause()
+    {
+        if (_isPaused)
+        {
+            game?.ResumeGame();
+        }
+        else
+        {
+            game?.PauseGame();
+        }
+        
+        _isPaused = !_isPaused;
+        StateHasChanged();
+    }
+    
+    private void ResetGame()
+    {
+        game?.NewGame(9, 9, 10);
+        message = null;
+        _isPaused = false;
+        StateHasChanged();
+    }
+    
+    public void Dispose()
+    {
+        GameService.OnStateChanged -= HandleStateChanged;
+    }
 }

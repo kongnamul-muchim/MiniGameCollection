@@ -19,6 +19,12 @@ public class GomokuGame : IGame
     public bool IsPaused => _stateManager.CurrentState == GameState.Paused;
 
     public event Action<GameEvent>? OnGameEvent;
+    
+    // Expose logic and board for web UI
+    public GomokuLogic Logic => _logic;
+    public Models.GomokuBoard Board => _logic.Board;
+    public int CurrentPlayer => _logic.CurrentPlayer;
+    public bool IsBlackTurn => _logic.CurrentPlayer == 1;
 
     public GomokuGame(GomokuLogic logic)
     {
@@ -51,8 +57,13 @@ public class GomokuGame : IGame
 
     public void ResetGame()
     {
-        _stateManager.ChangeState(GameState.Ready);
         _logic.StartGame();
+        _stateManager.ChangeState(GameState.Ready);
+    }
+    
+    public bool PlaceStone(int row, int col)
+    {
+        return _logic.PlaceStone(row, col);
     }
 
     public void EndGame()

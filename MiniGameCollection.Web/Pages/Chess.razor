@@ -6,30 +6,174 @@
 
 <h1>Chess</h1>
 
-<div class="game-container">
-    <p>Chess game page - Implementation in progress</p>
-    
-    <div class="game-controls">
-        <button class="btn btn-primary" @onclick="StartGame">Start Game</button>
+@if (game != null)
+{
+    <div class="game-container">
+        <div class="game-info">
+            <span>Turn: @(game.IsWhiteTurn ? "White" : "Black")</span>
+        </div>
+        
+        <div class="chess-board">
+            @for (int r = 0; r < 8; r++)
+            {
+                <div class="chess-row">
+                    @for (int c = 0; c < 8; c++)
+                    {
+                        var piece = game.GetPiece(r, c);
+                        var isLight = (r + c) % 2 == 0;
+                        var isSelected = selectedRow == r && selectedCol == c;
+                        var isLastMove = (game.LastMove?.From.Row == r && game.LastMove?.From.Column == c) ||
+                                        (game.LastMove?.To.Row == r && game.LastMove?.To.Column == c);
+                        
+                        <div class="chess-cell @(isLight ? "light" : "dark") @(isSelected ? "selected" : "") @(isLastMove ? "last-move" : "")"
+                             @onclick="@(() => SelectSquare(r, c))">
+                            @if (piece != null && piece.Type != PieceType.None)
+                            {
+                                <span class="chess-piece">@GetPieceSymbol(piece)</span>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        
+        @if (selectedRow >= 0)
+        {
+            <div class="game-hint">Click destination square or click same square to cancel</div>
+        }
+        
+        <div class="game-controls">
+            @if (!game.IsPlaying)
+            {
+                <button class="btn btn-primary" @onclick="StartGame">Start Game</button>
+            }
+            else
+            {
+                <button class="btn btn-secondary" @onclick="TogglePause">@(_isPaused ? "Resume" : "Pause")</button>
+                <button class="btn btn-danger" @onclick="ResetGame">Reset</button>
+            }
+        </div>
+        
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="game-message">@message</div>
+        }
     </div>
-    
-    <div class="chess-board-placeholder">
-        <p>Chess board will be rendered here</p>
-    </div>
-</div>
+}
+else
+{
+    <p>Loading game...</p>
+}
 
 @code {
     private ChessGame? game;
+    private int selectedRow = -1;
+    private int selectedCol = -1;
+    private bool _isPaused = false;
+    private string? message;
     
     protected override void OnInitialized()
     {
-        // TODO: Initialize game properly
+        var logic = new Chess.Logic.ChessLogic();
+        game = new ChessGame(logic);
+        GameService.StartGame(game);
+        GameService.OnStateChanged += HandleStateChanged;
+    }
+    
+    private void HandleStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+    
+    private string GetPieceSymbol(Games.Chess.Models.ChessPiece piece)
+    {
+        return piece switch
+        {
+            { Type: PieceType.King, Color: PieceColor.White } => "♔",
+            { Type: PieceType.Queen, Color: PieceColor.White } => "♕",
+            { Type: PieceType.Rook, Color: PieceColor.White } => "♖",
+            { Type: PieceType.Bishop, Color: PieceColor.White } => "♗",
+            { Type: PieceType.Knight, Color: PieceColor.White } => "♘",
+            { Type: PieceType.Pawn, Color: PieceColor.White } => "♙",
+            { Type: PieceType.King, Color: PieceColor.Black } => "♚",
+            { Type: PieceType.Queen, Color: PieceColor.Black } => "♛",
+            { Type: PieceType.Rook, Color: PieceColor.Black } => "♜",
+            { Type: PieceType.Bishop, Color: PieceColor.Black } => "♝",
+            { Type: PieceType.Knight, Color: PieceColor.Black } => "♞",
+            { Type: PieceType.Pawn, Color: PieceColor.Black } => "♟",
+            _ => ""
+        };
+    }
+    
+    private void SelectSquare(int row, int col)
+    {
+        if (!game?.IsPlaying ?? true || _isPaused) return;
+        
+        if (selectedRow == row && selectedCol == col)
+        {
+            selectedRow = -1;
+            selectedCol = -1;
+        }
+        else if (selectedRow >= 0)
+        {
+            var result = game.MovePiece(selectedRow, selectedCol, row, col);
+            if (result)
+            {
+                selectedRow = -1;
+                selectedCol = -1;
+            }
+            else
+            {
+                selectedRow = row;
+                selectedCol = col;
+            }
+        }
+        else
+        {
+            var piece = game.GetPiece(row, col);
+            if (piece != null && piece.Color == (game.IsWhiteTurn ? PieceColor.White : PieceColor.Black))
+            {
+                selectedRow = row;
+                selectedCol = col;
+            }
+        }
+        
+        StateHasChanged();
     }
     
     private void StartGame()
     {
-        // TODO: Start game
+        game?.StartGame();
+        message = null;
+        _isPaused = false;
+        selectedRow = -1;
+        selectedCol = -1;
+        StateHasChanged();
     }
     
-    public void Dispose() { }
+    private void TogglePause()
+    {
+        if (_isPaused)
+            game?.ResumeGame();
+        else
+            game?.PauseGame();
+        
+        _isPaused = !_isPaused;
+        StateHasChanged();
+    }
+    
+    private void ResetGame()
+    {
+        game?.ResetGame();
+        message = null;
+        _isPaused = false;
+        selectedRow = -1;
+        selectedCol = -1;
+        StateHasChanged();
+    }
+    
+    public void Dispose()
+    {
+        GameService.OnStateChanged -= HandleStateChanged;
+    }
 }

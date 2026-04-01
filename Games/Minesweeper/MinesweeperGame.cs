@@ -19,6 +19,17 @@ public class MinesweeperGame : IGame
     public bool IsPaused => _stateManager.CurrentState == GameState.Paused;
 
     public event Action<GameEvent>? OnGameEvent;
+    
+    // Expose logic for web UI access
+    public MinesweeperLogic Logic => _logic;
+    public Models.MinesweeperBoard? Board => _logic.Board;
+    
+    // Expose cell for web UI
+    public Models.Cell? GetCell(int row, int col) => _logic.Board?.Cells[row, col];
+    public int Rows => _logic.Board?.Rows ?? 9;
+    public int Columns => _logic.Board?.Columns ?? 9;
+    public int MineCount => _logic is { Board: var b } ? b.Cells.Cast<Models.Cell>().Count(c => c.IsMine) : 10;
+    public int RevealedCount => _logic is { Board: var b } ? b.Cells.Cast<Models.Cell>().Count(c => c.IsRevealed) : 0;
 
     public MinesweeperGame(MinesweeperLogic logic)
     {
@@ -51,7 +62,26 @@ public class MinesweeperGame : IGame
 
     public void ResetGame()
     {
+        _logic.Initialize(9, 9, 10);
         _stateManager.ChangeState(GameState.Ready);
+    }
+
+    public void NewGame(int rows = 9, int cols = 9, int mines = 10)
+    {
+        _logic.Initialize(rows, cols, mines);
+        _stateManager.ChangeState(GameState.Playing);
+    }
+
+    public void RevealCell(int row, int col)
+    {
+        if (_logic.Board == null) return;
+        _logic.RevealCell(row, col);
+    }
+
+    public void ToggleFlag(int row, int col)
+    {
+        if (_logic.Board == null) return;
+        _logic.ToggleFlag(row, col);
     }
 
     public void EndGame()

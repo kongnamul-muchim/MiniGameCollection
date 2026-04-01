@@ -19,6 +19,10 @@ public class SudokuGame : IGame
     public bool IsPaused => _stateManager.CurrentState == GameState.Paused;
 
     public event Action<GameEvent>? OnGameEvent;
+    
+    // Expose logic for web UI access
+    public SudokuLogic Logic => _logic;
+    public Games.Sudoku.Models.SudokuBoard? Board => _logic.Board;
 
     public SudokuGame(SudokuLogic logic)
     {
@@ -51,7 +55,19 @@ public class SudokuGame : IGame
 
     public void ResetGame()
     {
+        _logic.NewGame(_logic is { } l ? 1 : 1);
         _stateManager.ChangeState(GameState.Ready);
+    }
+
+    public void NewGame(int difficulty = 1)
+    {
+        _logic.NewGame(difficulty);
+        _stateManager.ChangeState(GameState.Playing);
+    }
+
+    public bool PlaceNumber(int row, int col, int value)
+    {
+        return _logic.PlaceNumber(row, col, value);
     }
 
     public void EndGame()

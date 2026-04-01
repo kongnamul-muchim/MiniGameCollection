@@ -19,6 +19,18 @@ public class ChessGame : IGame
     public bool IsPaused => _stateManager.CurrentState == GameState.Paused;
 
     public event Action<GameEvent>? OnGameEvent;
+    
+    // Expose logic and board for web UI
+    public ChessLogic Logic => _logic;
+    public Models.ChessBoard Board => _logic.Board;
+    public Models.PieceColor CurrentColor => _logic.CurrentColor;
+    public bool IsWhiteTurn => _logic.CurrentColor == Models.PieceColor.White;
+    
+    public Models.ChessPiece? GetPiece(int row, int col) => _logic.Board.GetPiece(row, col);
+    public bool MakeMove(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        return _logic.MakeMove(new Models.ChessMove(new Models.Position(fromRow, fromCol), new Models.Position(toRow, toCol)));
+    }
 
     public ChessGame(ChessLogic logic)
     {
@@ -41,7 +53,18 @@ public class ChessGame : IGame
 
     public void PauseGame() => _stateManager.ChangeState(GameState.Paused);
     public void ResumeGame() => _stateManager.ChangeState(GameState.Playing);
-    public void ResetGame() => _stateManager.ChangeState(GameState.Ready);
+    
+    public void ResetGame()
+    {
+        _logic.StartGame();
+        _stateManager.ChangeState(GameState.Ready);
+    }
+    
+    public bool MovePiece(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        return MakeMove(fromRow, fromCol, toRow, toCol);
+    }
+    
     public void EndGame() => _stateManager.ChangeState(GameState.GameOver);
 
     public string SerializeState() => JsonSerializer.Serialize(new { State = _stateManager.CurrentState });
