@@ -253,7 +253,7 @@ else
             {
                 selectedRow = row;
                 selectedCol = col;
-                validMoves = GetValidMovesFromValidator(row, col);
+                validMoves = game.GetValidMovesForPiece(row, col);
                 StateHasChanged();
                 return;
             }
@@ -271,63 +271,16 @@ else
             {
                 selectedRow = row;
                 selectedCol = col;
-                validMoves = GetValidMovesFromValidator(row, col);
+                validMoves = game.GetValidMovesForPiece(row, col);
             }
             StateHasChanged();
         }
     }
     
-    private bool WouldBeInCheck(ChessBoard board, ChessMove move, PieceColor color)
-    {
-        // Clone board to avoid modifying the actual board
-        var tempCells = new ChessPiece?[8, 8];
-        for (int r = 0; r < 8; r++)
-            for (int c = 0; c < 8; c++)
-                tempCells[r, c] = board.Cells[r, c];
-        
-        var piece = tempCells[move.From.Row, move.From.Column];
-        var captured = tempCells[move.To.Row, move.To.Column];
-        
-        tempCells[move.To.Row, move.To.Column] = piece;
-        tempCells[move.From.Row, move.From.Column] = null;
-        
-        var adapter = new TempBoardAdapter(tempCells);
-        return new ChessValidator().IsInCheck(adapter, color);
-    }
-    
-    private List<(int Row, int Col)> GetValidMovesFromValidator(int row, int col)
-    {
-        var moves = new List<(int, int)>();
-        if (game == null) return moves;
-        
-        var myColor = game.IsWhiteTurn ? PieceColor.White : PieceColor.Black;
-        var validator = new ChessValidator();
-        
-        for (int r = 0; r < 8; r++)
-        {
-            for (int c = 0; c < 8; c++)
-            {
-                var move = new ChessMove(new Position(row, col), new Position(r, c));
-                if (validator.IsValidMove(game.Board, move, myColor))
-                {
-                    // Check if move leaves king in check
-                    if (!WouldBeInCheck(game.Board, move, myColor))
-                    {
-                        moves.Add((r, c));
-                    }
-                }
-            }
-        }
-        
-        return moves;
-    }
-    
     private async void StartGame()
     {
-        Console.WriteLine($"[StartGame] Called. AIIsWhite={game?.AIIsWhite}, CurrentColor={game?.CurrentColor}");
         _aiFirstMoveDone = false;
         game?.StartGame();
-        Console.WriteLine($"[StartGame] After StartGame. AIIsWhite={game?.AIIsWhite}, CurrentColor={game?.CurrentColor}, IsPlaying={game?.IsPlaying}");
         _isPaused = false;
         selectedRow = -1;
         selectedCol = -1;
@@ -362,21 +315,14 @@ else
     
     private async Task TriggerAIFirstMove()
     {
-        Console.WriteLine($"[AI] TriggerAIFirstMove called");
-        Console.WriteLine($"[AI] _aiFirstMoveDone={_aiFirstMoveDone}, game={game != null}, HasAI={game?.HasAI}, IsPlaying={game?.IsPlaying}, IsAITurn={game?.IsAITurn()}, AIIsWhite={game?.AIIsWhite}, CurrentColor={game?.CurrentColor}");
-        
         if (_aiFirstMoveDone || game == null || !game.HasAI || !game.IsPlaying)
-        {
-            Console.WriteLine($"[AI] Early exit: _aiFirstMoveDone={_aiFirstMoveDone}, game={game != null}, HasAI={game?.HasAI}, IsPlaying={game?.IsPlaying}");
             return;
-        }
         
         if (game.IsAITurn())
         {
             _aiFirstMoveDone = true;
             aiThinking = true;
             StateHasChanged();
-            Console.WriteLine($"[AI] Starting AI move...");
             
             await Task.Delay(200);
             
@@ -384,9 +330,7 @@ else
             {
                 if (game != null)
                 {
-                    Console.WriteLine($"[AI] Calling MakeAIMoveWithPosition...");
                     var result = game.MakeAIMoveWithPosition();
-                    Console.WriteLine($"[AI] Result: {result?.success}, from=({result?.fromRow},{result?.fromCol}), to=({result?.toRow},{result?.toCol})");
                     if (result.HasValue && result.Value.success)
                     {
                         lastMove = (result.Value.fromRow, result.Value.fromCol, result.Value.toRow, result.Value.toCol);
@@ -394,12 +338,7 @@ else
                 }
                 aiThinking = false;
                 StateHasChanged();
-                Console.WriteLine($"[AI] AI move complete");
             });
-        }
-        else
-        {
-            Console.WriteLine($"[AI] Not AI's turn. CurrentColor={game.CurrentColor}, AIIsWhite={game.AIIsWhite}");
         }
     }
     

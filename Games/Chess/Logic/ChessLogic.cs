@@ -183,6 +183,53 @@ public class ChessLogic
     }
     
     /// <summary>
+    /// Get all valid moves for a piece at the given position.
+    /// Used by UI to highlight valid move targets.
+    /// </summary>
+    public List<(int Row, int Col)> GetValidMovesForPiece(int row, int col)
+    {
+        var moves = new List<(int, int)>();
+        var piece = Board.GetPiece(row, col);
+        if (piece == null || piece.Color != _state.CurrentColor) return moves;
+        
+        var validator = new ChessValidator();
+        
+        for (int r = 0; r < 8; r++)
+        {
+            for (int c = 0; c < 8; c++)
+            {
+                var move = new ChessMove(new Position(row, col), new Position(r, c));
+                if (validator.IsValidMove(Board, move, _state.CurrentColor, _state) && !WouldBeInCheck(move, _state.CurrentColor))
+                {
+                    moves.Add((r, c));
+                }
+            }
+        }
+        
+        // Castling
+        if (piece.Type == PieceType.King)
+        {
+            var ksMove = new ChessMove(new Position(row, col), new Position(row, 6), isCastling: true);
+            if (validator.IsValidMove(Board, ksMove, _state.CurrentColor, _state) && !WouldBeInCheck(ksMove, _state.CurrentColor))
+                moves.Add((row, 6));
+            
+            var qsMove = new ChessMove(new Position(row, col), new Position(row, 2), isCastling: true);
+            if (validator.IsValidMove(Board, qsMove, _state.CurrentColor, _state) && !WouldBeInCheck(qsMove, _state.CurrentColor))
+                moves.Add((row, 2));
+        }
+        
+        // En passant
+        if (piece.Type == PieceType.Pawn && _state.EnPassantTarget.HasValue)
+        {
+            var epMove = new ChessMove(new Position(row, col), _state.EnPassantTarget.Value, isEnPassant: true);
+            if (validator.IsValidMove(Board, epMove, _state.CurrentColor, _state) && !WouldBeInCheck(epMove, _state.CurrentColor))
+                moves.Add((_state.EnPassantTarget.Value.Row, _state.EnPassantTarget.Value.Column));
+        }
+        
+        return moves;
+    }
+    
+    /// <summary>
     /// Get AI move using Minimax.
     /// </summary>
     public ChessMove? GetAIMove()

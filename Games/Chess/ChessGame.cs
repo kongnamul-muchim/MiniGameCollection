@@ -31,6 +31,7 @@ public class ChessGame : IGame
     public bool AIIsWhite => _logic.AIIsWhite;
     
     public Models.ChessPiece? GetPiece(int row, int col) => _logic.Board.GetPiece(row, col);
+    public List<(int Row, int Col)> GetValidMovesForPiece(int row, int col) => _logic.GetValidMovesForPiece(row, col);
     public bool MakeMove(int fromRow, int fromCol, int toRow, int toCol)
     {
         return _logic.MakeMove(new Models.ChessMove(new Models.Position(fromRow, fromCol), new Models.Position(toRow, toCol)));
