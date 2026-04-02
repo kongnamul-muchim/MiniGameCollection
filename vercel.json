@@ -1,5 +1,5 @@
 {
   "buildCommand": null,
-  "outputDirectory": "wwwroot",
+  "outputDirectory": "wwwroot/wwwroot",
   "installCommand": null
 }
