@@ -21,19 +21,12 @@ public class ChessLogic
 
     public void StartGame()
     {
-        Board.Clear();
+        // Create a fresh board with initial position
+        var newBoard = new ChessBoard();
+        for(int r=0;r<8;r++)for(int c=0;c<8;c++)Board.Cells[r,c]=newBoard.Cells[r,c];
         _state.CurrentPlayer = 1;
         _state.IsGameOver = false;
         _state.Winner = null;
-        SetupBoard();
-    }
-    
-    private void SetupBoard()
-    {
-        // Reinitialize board
-        typeof(ChessBoard).GetMethod("SetupInitialPosition", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.Invoke(Board, null);
     }
 
     public bool MakeMove(ChessMove move)

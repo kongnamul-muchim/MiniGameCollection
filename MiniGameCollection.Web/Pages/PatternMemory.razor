@@ -6,9 +6,9 @@
 
 <h1>Pattern Memory</h1>
 
-@if (game is PatternMemoryGame)
-{
-    <div class="game-container">
+<div class="game-container">
+    @if (game != null)
+    {
         <div class="game-info">
             <span>Level: @currentLevel</span>
             <span>Score: @currentScore</span>
@@ -44,12 +44,12 @@
         {
             <div class="game-message">@message</div>
         }
-    </div>
-}
-else
-{
-    <p>Loading game...</p>
-}
+    }
+    else
+    {
+        <p>Loading game...</p>
+    }
+</div>
 
 @code {
     private PatternMemoryGame? game;
@@ -59,6 +59,7 @@ else
     private bool _isPaused = false;
     private string? message;
     private List<int> currentPattern = new();
+    private List<int> shownPattern = new();
     private int playerStep = 0;
     
     protected override void OnInitialized()
@@ -68,30 +69,51 @@ else
         game = new PatternMemoryGame(logic);
         GameService.StartGame(game);
         GameService.OnStateChanged += HandleStateChanged;
+        // Auto-start game on page enter
+        StartGame();
     }
     
-    private void HandleStateChanged()
-    {
-        if (game != null)
-        {
-            InvokeAsync(StateHasChanged);
-        }
-    }
+    private void HandleStateChanged() => InvokeAsync(StateHasChanged);
     
-    private void StartGame()
+    private async void StartGame()
     {
         game?.StartGame();
         message = "Watch the pattern...";
+        isShowingPattern = true;
+        currentPattern.Clear();
+        AddToPattern();
+        await ShowPattern();
+    }
+    
+    private void AddToPattern()
+    {
+        var rnd = new Random();
+        currentPattern.Add(rnd.Next(9));
+    }
+    
+    private async Task ShowPattern()
+    {
+        isShowingPattern = true;
+        shownPattern.Clear();
+        foreach (var idx in currentPattern)
+        {
+            shownPattern.Add(idx);
+            StateHasChanged();
+            await Task.Delay(600);
+            shownPattern.Clear();
+            StateHasChanged();
+            await Task.Delay(200);
+        }
+        isShowingPattern = false;
+        playerStep = 0;
+        message = "Your turn!";
         StateHasChanged();
     }
     
     private void TogglePause()
     {
-        if (_isPaused)
-            game?.ResumeGame();
-        else
-            game?.PauseGame();
-        
+        if (_isPaused) game?.ResumeGame();
+        else game?.PauseGame();
         _isPaused = !_isPaused;
         StateHasChanged();
     }
@@ -102,25 +124,46 @@ else
         currentLevel = 1;
         currentScore = 0;
         message = null;
+        currentPattern.Clear();
+        shownPattern.Clear();
         StateHasChanged();
     }
     
-    private bool IsHighlighted(int index)
-    {
-        return currentPattern.Contains(index);
-    }
+    private bool IsHighlighted(int index) => shownPattern.Contains(index);
     
     private void HandleTileClick(int index)
     {
-        if (isShowingPattern || !game.IsPlaying) return;
+        if (isShowingPattern || !game.IsPlaying || playerStep >= currentPattern.Count) return;
         
-        // TODO: Implement pattern matching logic
-        playerStep++;
-        StateHasChanged();
+        if (index == currentPattern[playerStep])
+        {
+            playerStep++;
+            if (playerStep >= currentPattern.Count)
+            {
+                currentScore += 10;
+                currentLevel++;
+                message = "Good! Next level...";
+                isShowingPattern = true;
+                StateHasChanged();
+                Task.Delay(1000).ContinueWith(_ => InvokeAsync(async () => {
+                    AddToPattern();
+                    await ShowPattern();
+                }));
+            }
+            else
+            {
+                message = $"Correct! ({playerStep}/{currentPattern.Count})";
+                StateHasChanged();
+            }
+        }
+        else
+        {
+            message = "Wrong! Try again.";
+            currentScore = Math.Max(0, currentScore - 5);
+            playerStep = 0;
+            StateHasChanged();
+        }
     }
     
-    public void Dispose()
-    {
-        GameService.OnStateChanged -= HandleStateChanged;
-    }
+    public void Dispose() => GameService.OnStateChanged -= HandleStateChanged;
 }

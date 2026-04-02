@@ -1,146 +1,287 @@
 @page "/minesweeper"
 @inject IGameStateService GameService
 @implements IDisposable
+@using Games.Minesweeper
+@using Games.Minesweeper.Models
+@using Games.Minesweeper.Logic
 
 <PageTitle>Minesweeper</PageTitle>
-
 <h1>Minesweeper</h1>
 
+<div class="game-container">
 @if (game != null)
 {
-    <div class="game-container">
-        <div class="game-info">
-            <span>Mines: @game.MineCount</span>
-            <span>Revealed: @game.RevealedCount</span>
-        </div>
-        
+    <div class="game-info">
+        <span>Mines: @game.MineCount</span>
+        <span>Revealed: @game.RevealedCount</span>
+        <span>Difficulty: @DifficultyName</span>
+    </div>
+    <div class="minesweeper-scroll-wrapper">
         <div class="minesweeper-board">
-            @for (int r = 0; r < game.Rows; r++)
+        @for (int r = 0; r < game.Rows; r++)
+        {
+            var row = r;
+            <div class="minesweeper-row">
+            @for (int c = 0; c < game.Columns; c++)
             {
-                <div class="minesweeper-row">
-                    @for (int c = 0; c < game.Columns; c++)
+                var col = c;
+                var cell = game.GetCell(row, col);
+                var isRevealed = cell?.IsRevealed ?? false;
+                var isFlagged = cell?.IsFlagged ?? false;
+                var isMine = cell?.IsMine ?? false;
+                var adjacent = cell?.AdjacentMines ?? 0;
+                var isClicked = clickedCells.Contains((row, col));
+
+                <div class="minesweeper-cell @(isRevealed ? "revealed" : "") @(isFlagged ? "flagged" : "") @(isClicked ? "clicked" : "") @(showAllMines && isMine ? "mine-revealed" : "")"
+                     @onclick="@(() => HandleLeftClick(row, col))"
+                     @oncontextmenu:preventDefault="true"
+                     @oncontextmenu="@(() => HandleRightClick(row, col))">
+                    @if (isRevealed || (showAllMines && isMine))
                     {
-                        var cell = game.GetCell(r, c);
-                        var isRevealed = cell?.IsRevealed ?? false;
-                        var isFlagged = cell?.IsFlagged ?? false;
-                        var isMine = cell?.IsMine ?? false;
-                        var adjacent = cell?.AdjacentMines ?? 0;
-                        
-                        <div class="minesweeper-cell @(isRevealed ? "revealed" : "") @(isFlagged ? "flagged" : "")"
-                             @onclick="@(() => HandleLeftClick(r, c))"
-                             @oncontextmenu="@(() => HandleRightClick(r, c))">
-                            @if (isRevealed)
-                            {
-                                @if (isMine)
-                                {
-                                    <span class="mine">💣</span>
-                                }
-                                else if (adjacent > 0)
-                                {
-                                    <span class="count-@adjacent">@adjacent</span>
-                                }
-                            }
-                            else if (isFlagged)
-                            {
-                                <span class="flag">🚩</span>
-                            }
-                        </div>
+                        @if (isMine) { <span>💣</span> }
+                        else if (adjacent > 0) { <span class="count-@adjacent">@adjacent</span> }
                     }
+                    else if (isFlagged) { <span>🚩</span> }
                 </div>
             }
+            </div>
+        }
         </div>
-        
-        <div class="game-controls">
-            @if (!game.IsPlaying)
-            {
-                <button class="btn btn-primary" @onclick="StartNewGame">New Game</button>
-            }
-            else
-            {
-                <button class="btn btn-secondary" @onclick="TogglePause">@(_isPaused ? "Resume" : "Pause")</button>
-                <button class="btn btn-danger" @onclick="ResetGame">Reset</button>
-            }
-        </div>
-        
-        @if (!string.IsNullOrEmpty(message))
+    </div>
+    <div class="difficulty-selector">
+        <span>Difficulty:</span>
+        @foreach (var d in difficulties)
         {
-            <div class="game-message">@message</div>
+            <button class="diff-btn @(difficulty==d.Value?"active":"")" @onclick="@(()=>SetDifficulty(d))">@d.Name</button>
         }
     </div>
+    <div class="game-controls">
+    @if(!game.IsPlaying){<button class="btn btn-primary" @onclick="StartNewGame">New Game</button>}
+    else{<button class="btn btn-secondary" @onclick="TogglePause">@(_isPaused?"Resume":"Pause")</button> <button class="btn btn-danger" @onclick="ResetGame">Reset</button>}
+    </div>
+    @if(!string.IsNullOrEmpty(msg)){<div class="game-message @(isGameOver?"game-over":"")">@msg</div>}
 }
-else
-{
-    <p>Loading game...</p>
-}
+else { <p>Loading...</p> }
+</div>
 
 @code {
     private MinesweeperGame? game;
     private bool _isPaused = false;
-    private string? message;
-    
+    private string? msg;
+    private bool isGameOver = false;
+    private bool showAllMines = false;
+    private HashSet<(int, int)> clickedCells = new();
+    private int difficulty = 1;
+    private List<DiffOpt> difficulties = new()
+    {
+        new DiffOpt { Name = "Easy", Value = 1, Rows = 9, Cols = 9, Mines = 10 },
+        new DiffOpt { Name = "Medium", Value = 2, Rows = 16, Cols = 16, Mines = 40 },
+        new DiffOpt { Name = "Hard", Value = 3, Rows = 16, Cols = 30, Mines = 99 },
+        new DiffOpt { Name = "Extreme", Value = 4, Rows = 50, Cols = 50, Mines = 250 }
+    };
+    private string DifficultyName => difficulties.FirstOrDefault(d => d.Value == difficulty)?.Name ?? "Easy";
+
     protected override void OnInitialized()
     {
-        var generator = new Minesweeper.Logic.BoardGenerator();
-        var revealer = new Minesweeper.Logic.CellRevealer();
-        var logic = new Minesweeper.Logic.MinesweeperLogic(generator, revealer);
+        var rnd = new Random();
+        var gen = new BoardGenerator(rnd);
+        var rev = new CellRevealer();
+        var logic = new MinesweeperLogic(gen, rev);
         game = new MinesweeperGame(logic);
         GameService.StartGame(game);
-        GameService.OnStateChanged += HandleStateChanged;
+        GameService.OnStateChanged += OnSC;
+        StartNewGame();
     }
-    
-    private void HandleStateChanged()
+
+    private void OnSC() => InvokeAsync(StateHasChanged);
+
+    private void SetDifficulty(DiffOpt d)
     {
-        InvokeAsync(StateHasChanged);
+        difficulty = d.Value;
+        StartNewGame();
     }
-    
-    private void HandleLeftClick(int row, int col)
+
+    private void HandleLeftClick(int r, int c)
     {
-        if (!game?.IsPlaying ?? true || _isPaused) return;
-        game.RevealCell(row, col);
+        if (game == null || !game.IsPlaying || _isPaused) return;
+        if (game.Board == null) return;
+        if (r < 0 || r >= game.Rows || c < 0 || c >= game.Columns) return;
+
+        var cell = game.GetCell(r, c);
+        if (cell == null) return;
+
+        if (cell.IsRevealed && cell.AdjacentMines > 0)
+        {
+            clickedCells.Clear();
+            for (int dr = -1; dr <= 1; dr++)
+            {
+                for (int dc = -1; dc <= 1; dc++)
+                {
+                    int nr = r + dr;
+                    int nc = c + dc;
+                    if (nr >= 0 && nr < game.Rows && nc >= 0 && nc < game.Columns)
+                    {
+                        var nCell = game.GetCell(nr, nc);
+                        if (nCell != null && !nCell.IsRevealed && !nCell.IsFlagged)
+                        {
+                            clickedCells.Add((nr, nc));
+                        }
+                    }
+                }
+            }
+            StateHasChanged();
+            Task.Delay(150).ContinueWith(_ => InvokeAsync(() => {
+                clickedCells.Clear();
+                StateHasChanged();
+            }));
+
+            int flagCount = 0;
+            var neighbors = new List<(int, int)>();
+
+            for (int dr = -1; dr <= 1; dr++)
+            {
+                for (int dc = -1; dc <= 1; dc++)
+                {
+                    if (dr == 0 && dc == 0) continue;
+                    int nr = r + dr;
+                    int nc = c + dc;
+                    if (nr >= 0 && nr < game.Rows && nc >= 0 && nc < game.Columns)
+                    {
+                        var nCell = game.GetCell(nr, nc);
+                        if (nCell != null)
+                        {
+                            if (nCell.IsFlagged) flagCount++;
+                            else neighbors.Add((nr, nc));
+                        }
+                    }
+                }
+            }
+
+            if (flagCount == cell.AdjacentMines)
+            {
+                foreach (var (nr, nc) in neighbors)
+                {
+                    game.RevealCell(nr, nc);
+                    var revealed = game.GetCell(nr, nc);
+                    if (revealed?.IsMine == true)
+                    {
+                        GameOver();
+                        return;
+                    }
+                }
+                CheckWin();
+            }
+        }
+        else if (!cell.IsFlagged)
+        {
+            if (!cell.IsRevealed)
+            {
+                clickedCells.Clear();
+                clickedCells.Add((r, c));
+                StateHasChanged();
+                Task.Delay(150).ContinueWith(_ => InvokeAsync(() => {
+                    clickedCells.Clear();
+                    StateHasChanged();
+                }));
+            }
+
+            game.RevealCell(r, c);
+            if (cell.IsMine)
+            {
+                GameOver();
+                return;
+            }
+            CheckWin();
+        }
+
         StateHasChanged();
     }
-    
-    private bool HandleRightClick(int row, int col)
+
+    private void GameOver()
     {
-        if (!game?.IsPlaying ?? true || _isPaused) return false;
-        game.ToggleFlag(row, col);
+        isGameOver = true;
+        showAllMines = true;
+        msg = "💥 GAME OVER! 💥";
+        StateHasChanged();
+        Task.Delay(3000).ContinueWith(_ => InvokeAsync(() => {
+            StartNewGame();
+        }));
+    }
+
+    private bool HandleRightClick(int r, int c)
+    {
+        if (game == null || !game.IsPlaying || _isPaused) return false;
+        if (game.Board == null) return false;
+        if (r < 0 || r >= game.Rows || c < 0 || c >= game.Columns) return false;
+
+        game.ToggleFlag(r, c);
+        CheckWin();
         StateHasChanged();
         return true;
     }
-    
+
+    private void CheckWin()
+    {
+        if (game == null || game.Board == null) return;
+
+        int correctFlags = 0;
+        int totalMines = 0;
+
+        for (int r = 0; r < game.Rows; r++)
+        {
+            for (int c = 0; c < game.Columns; c++)
+            {
+                var cell = game.GetCell(r, c);
+                if (cell == null) continue;
+
+                if (cell.IsMine)
+                {
+                    totalMines++;
+                    if (cell.IsFlagged) correctFlags++;
+                }
+                else if (cell.IsFlagged)
+                {
+                    return;
+                }
+            }
+        }
+
+        if (correctFlags == totalMines && totalMines > 0)
+        {
+            msg = "🎉 YOU WIN! 🎉";
+            StateHasChanged();
+            Task.Delay(3000).ContinueWith(_ => InvokeAsync(() => {
+                StartNewGame();
+            }));
+        }
+    }
+
     private void StartNewGame()
     {
-        game?.NewGame(9, 9, 10);
-        message = null;
+        var d = difficulties.FirstOrDefault(x => x.Value == difficulty);
+        game?.NewGame(d.Rows, d.Cols, d.Mines);
         _isPaused = false;
+        msg = null;
+        isGameOver = false;
+        showAllMines = false;
+        clickedCells.Clear();
         StateHasChanged();
     }
-    
+
     private void TogglePause()
     {
-        if (_isPaused)
-        {
-            game?.ResumeGame();
-        }
-        else
-        {
-            game?.PauseGame();
-        }
-        
+        if (_isPaused) game?.ResumeGame();
+        else game?.PauseGame();
         _isPaused = !_isPaused;
         StateHasChanged();
     }
-    
+
     private void ResetGame()
     {
-        game?.NewGame(9, 9, 10);
-        message = null;
-        _isPaused = false;
-        StateHasChanged();
+        StartNewGame();
     }
-    
-    public void Dispose()
-    {
-        GameService.OnStateChanged -= HandleStateChanged;
-    }
+
+    public void Dispose() => GameService.OnStateChanged -= OnSC;
+
+    private class DiffOpt { public string Name { get; set; } = ""; public int Value { get; set; } public int Rows { get; set; } public int Cols { get; set; } public int Mines { get; set; } }
 }

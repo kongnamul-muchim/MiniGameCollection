@@ -17,10 +17,11 @@ public class SudokuGenerator : ISudokuGenerator
         // Remove cells based on difficulty
         int cellsToRemove = difficulty switch
         {
-            1 => 35, // Easy - 46 given
-            2 => 45, // Medium - 36 given
-            3 => 55, // Hard - 26 given
-            _ => 35
+            1 => 30, // Easy - 51 given
+            2 => 40, // Medium - 41 given
+            3 => 50, // Hard - 31 given
+            4 => 60, // Extreme - 21 given
+            _ => 30
         };
         
         // Create list of positions to remove

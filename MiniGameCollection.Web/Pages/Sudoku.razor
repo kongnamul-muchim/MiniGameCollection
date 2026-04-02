@@ -3,152 +3,234 @@
 @implements IDisposable
 
 <PageTitle>Sudoku</PageTitle>
-
 <h1>Sudoku</h1>
 
+<div class="game-container" @ref="container" tabindex="0" @onkeydown="OnKey" style="outline:none;">
 @if (game != null)
 {
-    <div class="game-container">
+    var board = game.Board;
+    if (board != null)
+    {
         <div class="game-info">
             <span>Mistakes: @mistakes</span>
+            <span>Difficulty: @DifficultyName</span>
+            <span class="mode-indicator @(isNoteMode?"note-mode":"")">@(isNoteMode?"NOTE MODE":"INPUT MODE")</span>
         </div>
-        
         <div class="sudoku-board">
-            @for (int r = 0; r < 9; r++)
+        @for (int r = 0; r < 9; r++)
+        {
+            var row = r;
+            <div class="sudoku-row">
+            @for (int c = 0; c < 9; c++)
             {
-                <div class="sudoku-row">
-                    @for (int c = 0; c < 9; c++)
+                var col = c;
+                var v = board.Cells[row, col];
+                var f = board.IsFixed(row, col);
+                var s = sr == row && sc == col;
+                var br = row % 3 == 2 ? "border-bottom" : "";
+                var bc = col % 3 == 2 ? "border-right" : "";
+                var cellNotes = GetNotes(row, col);
+                <div class="sudoku-cell @br @bc @(s?"selected":"") @(f?"fixed":"")" @onclick="@(()=>Sel(row,col))">
+                    @if (v > 0)
                     {
-                        var value = game.Board?.Cells[r, c] ?? 0;
-                        var isFixed = game.Board?.IsFixed(r, c) ?? false;
-                        var isSelected = selectedRow == r && selectedCol == c;
-                        var boxBorderR = r % 3 == 2 ? " border-bottom" : "";
-                        var boxBorderC = c % 3 == 2 ? " border-right" : "";
-                        
-                        <div class="sudoku-cell@(boxBorderR)@(boxBorderC) @(isSelected ? "selected" : "") @(isFixed ? "fixed" : "")"
-                             @onclick="@(() => SelectCell(r, c))">
-                            @if (value > 0)
+                        @v
+                    }
+                    else if (cellNotes.Count > 0)
+                    {
+                        <div class="notes-grid">
+                            @for (int n = 1; n <= 9; n++)
                             {
-                                @value
+                                <span class="note-num @(cellNotes.Contains(n)?"visible":"")">@n</span>
                             }
                         </div>
                     }
                 </div>
             }
-        </div>
-        
-        <div class="number-pad">
-            @for (int i = 1; i <= 9; i++)
-            {
-                <button class="number-btn" @onclick="@(() => PlaceNumber(i))">@i</button>
-            }
-            <button class="number-btn number-btn-clear" @onclick="@(() => PlaceNumber(0))">⌫</button>
-        </div>
-        
-        <div class="game-controls">
-            @if (!game.IsPlaying)
-            {
-                <button class="btn btn-primary" @onclick="StartNewGame">New Game</button>
-            }
-            else
-            {
-                <button class="btn btn-secondary" @onclick="TogglePause">@(_isPaused ? "Resume" : "Pause")</button>
-                <button class="btn btn-danger" @onclick="ResetGame">Reset</button>
-            }
-        </div>
-        
-        @if (!string.IsNullOrEmpty(message))
-        {
-            <div class="game-message">@message</div>
+            </div>
         }
-    </div>
+        </div>
+        <div class="number-pad">
+        <button class="number-btn" @onclick="@(()=>N(1))">1</button><button class="number-btn" @onclick="@(()=>N(2))">2</button><button class="number-btn" @onclick="@(()=>N(3))">3</button>
+        <button class="number-btn" @onclick="@(()=>N(4))">4</button><button class="number-btn" @onclick="@(()=>N(5))">5</button><button class="number-btn" @onclick="@(()=>N(6))">6</button>
+        <button class="number-btn" @onclick="@(()=>N(7))">7</button><button class="number-btn" @onclick="@(()=>N(8))">8</button><button class="number-btn" @onclick="@(()=>N(9))">9</button>
+        <button class="number-btn number-btn-clear" @onclick="@(()=>N(0))">Clear</button>
+        </div>
+        <div class="mode-toggle">
+            <button class="mode-btn @(isNoteMode?"active":"")" @onclick="ToggleMode">NOTE MODE</button>
+        </div>
+        <div class="difficulty-selector">
+            <span>Difficulty:</span>
+            @foreach (var d in difficulties)
+            {
+                <button class="diff-btn @(difficulty==d.Value?"active":"")" @onclick="@(()=>SetDifficulty(d))">@d.Name</button>
+            }
+        </div>
+        <div class="game-controls">
+        @if(!game.IsPlaying){<button class="btn btn-primary" @onclick="NewG">New Game</button>}
+        else{<button class="btn btn-secondary" @onclick="Pause">@(_p?"Resume":"Pause")</button> <button class="btn btn-danger" @onclick="Res">Reset</button>}
+        </div>
+        @if(!string.IsNullOrEmpty(msg)){<div class="game-message">@msg</div>}
+    }
+    else { <p>Initializing board...</p> }
 }
-else
-{
-    <p>Loading game...</p>
-}
+else { <p>Loading game...</p> }
+</div>
 
 @code {
     private SudokuGame? game;
-    private int selectedRow = -1;
-    private int selectedCol = -1;
-    private int mistakes = 0;
-    private bool _isPaused = false;
-    private string? message;
-    
+    private int sr = -1, sc = -1, mistakes = 0;
+    private bool _p = false;
+    private string? msg;
+    private ElementReference container;
+    private int difficulty = 1;
+    private bool isNoteMode = false;
+    private Dictionary<(int, int), HashSet<int>> notes = new();
+    private List<DiffOpt> difficulties = new()
+    {
+        new DiffOpt { Name = "Easy", Value = 1 },
+        new DiffOpt { Name = "Medium", Value = 2 },
+        new DiffOpt { Name = "Hard", Value = 3 },
+        new DiffOpt { Name = "Extreme", Value = 4 }
+    };
+    private string DifficultyName => difficulties.FirstOrDefault(d => d.Value == difficulty)?.Name ?? "Easy";
+
     protected override void OnInitialized()
     {
-        var generator = new Games.Sudoku.Logic.SudokuGenerator(new Random());
-        var validator = new Games.Sudoku.Logic.SudokuValidator();
-        var logic = new Games.Sudoku.Logic.SudokuLogic(generator, validator);
+        var rnd = new Random();
+        var gen = new SudokuGenerator(rnd);
+        var val = new SudokuValidator();
+        var logic = new SudokuLogic(gen, val);
         game = new SudokuGame(logic);
         GameService.StartGame(game);
-        GameService.OnStateChanged += HandleStateChanged;
+        GameService.OnStateChanged += OnSC;
     }
-    
-    private void HandleStateChanged()
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        InvokeAsync(StateHasChanged);
+        if (firstRender) await container.FocusAsync();
+        await base.OnAfterRenderAsync(firstRender);
     }
-    
-    private void SelectCell(int row, int col)
+
+    private void OnSC() => InvokeAsync(StateHasChanged);
+
+    private HashSet<int> GetNotes(int r, int c)
     {
-        if (!game?.IsPlaying ?? true) return;
-        if (game.Board?.IsFixed(row, col) ?? true) return;
-        
-        selectedRow = row;
-        selectedCol = col;
+        if (notes.TryGetValue((r, c), out var set)) return set;
+        return new HashSet<int>();
+    }
+
+    private void ToggleMode()
+    {
+        isNoteMode = !isNoteMode;
         StateHasChanged();
     }
-    
-    private void PlaceNumber(int value)
+
+    private void SetDifficulty(DiffOpt d)
     {
-        if (selectedRow < 0 || selectedCol < 0 || game == null) return;
-        
-        var result = game.PlaceNumber(selectedRow, selectedCol, value);
-        if (!result && value > 0)
+        difficulty = d.Value;
+        notes.Clear();
+        game?.NewGame(difficulty);
+        mistakes = 0; msg = null; sr = -1; sc = -1;
+        _ = container.FocusAsync();
+        StateHasChanged();
+    }
+
+    private void Sel(int r, int c)
+    {
+        if (game == null || game.Board == null) return;
+        if (!game.IsPlaying) return;
+        if (game.Board.IsFixed(r, c)) return;
+        sr = r; sc = c;
+        _ = container.FocusAsync();
+        StateHasChanged();
+    }
+
+    private void N(int n)
+    {
+        if (game == null || game.Board == null) return;
+        if (sr < 0 || sr >= 9 || sc < 0 || sc >= 9) return;
+        if (game.Board.IsFixed(sr, sc)) return;
+        if (isNoteMode)
         {
-            mistakes++;
+            if (n == 0) { notes.Remove((sr, sc)); }
+            else
+            {
+                var key = (sr, sc);
+                if (!notes.ContainsKey(key)) notes[key] = new HashSet<int>();
+                if (notes[key].Contains(n)) notes[key].Remove(n);
+                else notes[key].Add(n);
+                if (notes[key].Count == 0) notes.Remove(key);
+            }
         }
-        
-        selectedRow = -1;
-        selectedCol = -1;
-        StateHasChanged();
-    }
-    
-    private void StartNewGame()
-    {
-        game?.NewGame(1);
-        message = null;
-        mistakes = 0;
-        selectedRow = -1;
-        selectedCol = -1;
-        StateHasChanged();
-    }
-    
-    private void TogglePause()
-    {
-        if (_isPaused)
-            game?.ResumeGame();
         else
-            game?.PauseGame();
-        
-        _isPaused = !_isPaused;
+        {
+            if (!game.PlaceNumber(sr, sc, n) && n > 0) mistakes++;
+            notes.Remove((sr, sc));
+            if (n > 0)
+            {
+                for (int i = 0; i < 9; i++) { RemoveNote(sr, i, n); RemoveNote(i, sc, n); }
+                var boxR = (sr / 3) * 3;
+                var boxC = (sc / 3) * 3;
+                for (int r = boxR; r < boxR + 3; r++)
+                    for (int c = boxC; c < boxC + 3; c++)
+                        RemoveNote(r, c, n);
+            }
+        }
+        sr = -1; sc = -1;
         StateHasChanged();
     }
-    
-    private void ResetGame()
+
+    private void RemoveNote(int r, int c, int n)
     {
-        game?.NewGame(1);
-        message = null;
-        mistakes = 0;
-        selectedRow = -1;
-        selectedCol = -1;
+        var key = (r, c);
+        if (notes.ContainsKey(key)) { notes[key].Remove(n); if (notes[key].Count == 0) notes.Remove(key); }
+    }
+
+    private void OnKey(KeyboardEventArgs e)
+    {
+        if (game == null || game.Board == null) return;
+        if (e.Key == "n" || e.Key == "N") { ToggleMode(); return; }
+        if (e.Key == "1") { N(1); return; }
+        if (e.Key == "2") { N(2); return; }
+        if (e.Key == "3") { N(3); return; }
+        if (e.Key == "4") { N(4); return; }
+        if (e.Key == "5") { N(5); return; }
+        if (e.Key == "6") { N(6); return; }
+        if (e.Key == "7") { N(7); return; }
+        if (e.Key == "8") { N(8); return; }
+        if (e.Key == "9") { N(9); return; }
+        if (e.Key == "Backspace" || e.Key == "Delete") { N(0); return; }
+        if (e.Key == "ArrowUp" && sr > 0) { sr--; StateHasChanged(); return; }
+        if (e.Key == "ArrowDown" && sr < 8) { sr++; StateHasChanged(); return; }
+        if (e.Key == "ArrowLeft" && sc > 0) { sc--; StateHasChanged(); return; }
+        if (e.Key == "ArrowRight" && sc < 8) { sc++; StateHasChanged(); return; }
+    }
+
+    private void NewG()
+    {
+        notes.Clear();
+        game?.NewGame(difficulty);
+        mistakes = 0; msg = null; sr = -1; sc = -1;
+        _ = container.FocusAsync();
         StateHasChanged();
     }
-    
-    public void Dispose()
+
+    private void Pause()
     {
-        GameService.OnStateChanged -= HandleStateChanged;
+        if (_p) game?.ResumeGame(); else game?.PauseGame();
+        _p = !_p; StateHasChanged();
     }
+
+    private void Res()
+    {
+        notes.Clear();
+        game?.NewGame(difficulty);
+        mistakes = 0; msg = null; sr = -1; sc = -1;
+        _ = container.FocusAsync();
+        StateHasChanged();
+    }
+
+    public void Dispose() => GameService.OnStateChanged -= OnSC;
+
+    private class DiffOpt { public string Name { get; set; } = ""; public int Value { get; set; } }
 }

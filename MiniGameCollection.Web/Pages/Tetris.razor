@@ -1,192 +1,262 @@
 @page "/tetris"
 @inject IGameStateService GameService
 @implements IDisposable
+@using Games.Tetris
+@using Games.Tetris.Logic
+@using Games.Tetris.Models
 
 <PageTitle>Tetris</PageTitle>
-
 <h1>Tetris</h1>
 
-@if (game != null)
+<div class="game-container" @ref="container" tabindex="0" @onkeydown="OnKeyDown" style="outline:none;">
+@if (game != null && game.Board != null && game.CurrentPiece != null)
 {
-    <div class="game-container tetris-container">
-        <div class="tetris-layout">
-            <div class="tetris-board" @ref="boardElement" tabindex="0">
-                @for (int r = 0; r < 20; r++)
+    <div class="game-info">
+        <span>Score: @game.Score</span>
+        <span>Level: @game.Level</span>
+        <span>Lines: @game.LinesCleared</span>
+        <span class="hint">(WASD / Arrows / Space / Double-Down for Hard Drop)</span>
+    </div>
+    <div class="tetris-layout">
+        <div class="tetris-board">
+        @for (int r = 0; r < 20; r++)
+        {
+            <div class="tetris-row">
+            @for (int c = 0; c < 10; c++)
+            {
+                var cell = game.Board.GetCell(r, c);
+                var cur = game.CurrentPiece;
+                var isCur = false;
+                var isGhost = false;
+                var edgeClasses = "";
+                if (cur != null && cur.Shape != null)
                 {
-                    <div class="tetris-row">
-                        @for (int c = 0; c < 10; c++)
+                    var rows = cur.Shape.GetLength(0);
+                    var cols = cur.Shape.GetLength(1);
+                    if (r >= cur.Row && r < cur.Row + rows && c >= cur.Column && c < cur.Column + cols)
+                    {
+                        var sr = r - cur.Row;
+                        var sc = c - cur.Column;
+                        isCur = cur.Shape[sr, sc] == 1;
+                        if (isCur)
                         {
-                            var cellColor = game.Board?.GetCell(r, c) ?? 0;
-                            var isCurrentPiece = game.CurrentPiece?.Shape != null && 
-                                r >= game.CurrentPiece.Row && r < game.CurrentPiece.Row + game.CurrentPiece.Shape.GetLength(0) &&
-                                c >= game.CurrentPiece.Column && c < game.CurrentPiece.Column + game.CurrentPiece.Shape.GetLength(1) &&
-                                game.CurrentPiece.Shape[r - game.CurrentPiece.Row, c - game.CurrentPiece.Column] == 1;
-                            
-                            <div class="tetris-cell @(isCurrentPiece ? "current-piece" : "") @(cellColor > 0 ? $"piece-{cellColor}" : "")"></div>
+                            var edgeL = sc == 0 || cur.Shape[sr, sc - 1] == 0;
+                            var edgeR = sc == cols - 1 || cur.Shape[sr, sc + 1] == 0;
+                            var edgeT = sr == 0 || cur.Shape[sr - 1, sc] == 0;
+                            var edgeB = sr == rows - 1 || cur.Shape[sr + 1, sc] == 0;
+                            if (edgeL) edgeClasses += " edge-left";
+                            if (edgeR) edgeClasses += " edge-right";
+                            if (edgeT) edgeClasses += " edge-top";
+                            if (edgeB) edgeClasses += " edge-bottom";
                         }
+                    }
+                    if (!isCur && r >= ghostRow && r < ghostRow + rows && c >= cur.Column && c < cur.Column + cols)
+                    {
+                        var sr = r - ghostRow;
+                        var sc = c - cur.Column;
+                        isGhost = cur.Shape[sr, sc] == 1;
+                        if (isGhost)
+                        {
+                            var edgeL = sc == 0 || cur.Shape[sr, sc - 1] == 0;
+                            var edgeR = sc == cols - 1 || cur.Shape[sr, sc + 1] == 0;
+                            var edgeT = sr == 0 || cur.Shape[sr - 1, sc] == 0;
+                            var edgeB = sr == rows - 1 || cur.Shape[sr + 1, sc] == 0;
+                            if (edgeL) edgeClasses += " ghost-edge-left";
+                            if (edgeR) edgeClasses += " ghost-edge-right";
+                            if (edgeT) edgeClasses += " ghost-edge-top";
+                            if (edgeB) edgeClasses += " ghost-edge-bottom";
+                        }
+                    }
+                }
+                <div class="tetris-cell @(cell == 0 && !isCur && !isGhost ? "empty" : "") @(isCur ? $"piece-{cur.Color} current-piece" : "") @(isGhost ? "ghost-piece" : "") @(cell > 0 ? $"locked piece-{cell}" : "") @edgeClasses"></div>
+            }
+            </div>
+        }
+        </div>
+        <div class="tetris-sidebar">
+            <div class="next-piece"><h3>Next</h3><div class="next-piece-display">
+            @if (game.NextPiece != null && game.NextPiece.Shape != null)
+            {
+                var nr = game.NextPiece.Shape.GetLength(0);
+                var nc = game.NextPiece.Shape.GetLength(1);
+                <div class="mini-board">
+                @for (int r = 0; r < nr; r++)
+                {
+                    <div class="mini-row">
+                    @for (int c = 0; c < nc; c++)
+                    {
+                        var v = game.NextPiece.Shape[r, c];
+                        <div class="mini-cell @(v > 0 ? $"piece-{game.NextPiece.Color}" : "")"></div>
+                    }
                     </div>
                 }
-            </div>
-            
-            <div class="tetris-sidebar">
-                <div class="next-piece">
-                    <h3>Next</h3>
-                    <div class="next-piece-display">
-                        @if (game.NextPiece != null)
-                        {
-                            <div class="mini-board">
-                                @for (int r = 0; r < 4; r++)
-                                {
-                                    <div class="mini-row">
-                                        @for (int c = 0; c < 4; c++)
-                                        {
-                                            var val = game.NextPiece.Shape[r, c];
-                                            <div class="mini-cell @(val > 0 ? $"piece-{val}" : "")"></div>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
                 </div>
-                
-                <div class="game-info">
-                    <div>Score: @game.Score</div>
-                    <div>Level: @game.Level</div>
-                    <div>Lines: @game.LinesCleared</div>
-                </div>
+            }
+            </div></div>
+            <div class="tetris-stats">
+                <div class="stat-row"><span class="stat-label">Score</span><span class="stat-value">@game.Score</span></div>
+                <div class="stat-row"><span class="stat-label">Level</span><span class="stat-value">@game.Level</span></div>
+                <div class="stat-row"><span class="stat-label">Lines</span><span class="stat-value">@game.LinesCleared</span></div>
             </div>
         </div>
-        
-        <div class="game-controls">
-            @if (!game.IsPlaying)
-            {
-                <button class="btn btn-primary" @onclick="StartGame">Start Game</button>
-            }
-            else
-            {
-                <button class="btn btn-secondary" @onclick="TogglePause">@(_isPaused ? "Resume" : "Pause")</button>
-                <button class="btn btn-danger" @onclick="ResetGame">Reset</button>
-            }
-        </div>
-        
-        <div class="mobile-controls">
-            <button class="mobile-btn" @onclick="MoveLeft">◀</button>
-            <button class="mobile-btn" @onclick="Rotate">↻</button>
-            <button class="mobile-btn" @onclick="MoveRight">▶</button>
-            <button class="mobile-btn" @onclick="SoftDrop">▼</button>
-        </div>
-        
-        @if (!string.IsNullOrEmpty(message))
-        {
-            <div class="game-message">@message</div>
-        }
+    </div>
+    <div class="game-controls">
+    @if (!game.IsPlaying) { <button class="btn btn-primary" @onclick="Start">Start Game</button> }
+    else { <button class="btn btn-secondary" @onclick="Pause">@(_p ? "Resume" : "Pause")</button> <button class="btn btn-danger" @onclick="Res">Reset</button> }
+    </div>
+    <div class="mobile-controls">
+        <button class="mobile-btn" @onclick="Left">◀</button><button class="mobile-btn" @onclick="Rot">↻</button><button class="mobile-btn" @onclick="Right">▶</button><button class="mobile-btn" @onclick="Drop">▼</button>
     </div>
 }
-else
-{
-    <p>Loading game...</p>
-}
+else { <p>Loading...</p> }
+</div>
 
 @code {
     private TetrisGame? game;
-    private ElementReference boardElement;
-    private bool _isPaused = false;
-    private string? message;
-    private System.Timers.Timer? gameLoop;
-    
+    private bool _p = false;
+    private CancellationTokenSource? _cts;
+    private Task? _gameLoop;
+    private ElementReference container;
+    private int ghostRow = 0;
+    private DateTime _lastDownPress = DateTime.MinValue;
+
     protected override void OnInitialized()
     {
-        var generator = new Tetris.Logic.TetrominoGenerator();
-        var checker = new Tetris.Logic.CollisionChecker();
-        var clearer = new Tetris.Logic.LineClearer();
-        var logic = new Tetris.Logic.TetrisLogic(generator, checker, clearer);
+        var rnd = new Random();
+        var gen = new TetrominoGenerator(rnd);
+        var chk = new CollisionChecker();
+        var clr = new LineClearer();
+        var logic = new TetrisLogic(gen, chk, clr);
         game = new TetrisGame(logic);
-        GameService.StartGame(game);
-        GameService.OnStateChanged += HandleStateChanged;
+        GameService.OnStateChanged += SC;
+        game.StartGame();
+        CalculateGhost();
+        StartGameLoop();
     }
-    
-    private void HandleStateChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            _ = Task.Run(async () =>
-            {
-                while (true)
-                {
-                    if (game?.IsPlaying == true && _isPaused == false)
-                    {
-                        await InvokeAsync(() => {
-                            game?.Tick();
-                            StateHasChanged();
-                        });
-                    }
-                    await Task.Delay(1000 / (game?.Level ?? 1));
-                }
-            });
-        }
+        if (firstRender) await container.FocusAsync();
         await base.OnAfterRenderAsync(firstRender);
     }
-    
-    private void StartGame()
+
+    private void SC() => InvokeAsync(StateHasChanged);
+
+    private void CalculateGhost()
+    {
+        if (game?.CurrentPiece == null || game.Board == null) return;
+        var cur = game.CurrentPiece;
+        var rows = cur.Shape.GetLength(0);
+        var cols = cur.Shape.GetLength(1);
+        ghostRow = cur.Row;
+        while (true)
+        {
+            var canGoDown = true;
+            for (int gr = 0; gr < rows; gr++)
+            {
+                for (int gc = 0; gc < cols; gc++)
+                {
+                    if (cur.Shape[gr, gc] == 1)
+                    {
+                        var br = ghostRow + 1 + gr;
+                        var bc = cur.Column + gc;
+                        if (br >= 20 || (br >= 0 && bc >= 0 && bc < 10 && game.Board.GetCell(br, bc) > 0))
+                        {
+                            canGoDown = false;
+                        }
+                    }
+                }
+            }
+            if (canGoDown) ghostRow++;
+            else break;
+        }
+    }
+
+    private void StartGameLoop()
+    {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        _gameLoop = Task.Run(async () =>
+        {
+            while (!_cts.Token.IsCancellationRequested)
+            {
+                if (game?.IsPlaying == true && !_p)
+                {
+                    game.Tick();
+                    CalculateGhost();
+                    await InvokeAsync(StateHasChanged);
+                }
+                await Task.Delay(800, _cts.Token);
+            }
+        }, _cts.Token);
+    }
+
+    private void Start()
     {
         game?.StartGame();
-        message = null;
-        _isPaused = false;
+        _p = false;
+        CalculateGhost();
+        StartGameLoop();
+        _ = container.FocusAsync();
         StateHasChanged();
     }
-    
-    private void TogglePause()
+
+    private void Pause()
     {
-        if (_isPaused)
-            game?.ResumeGame();
-        else
-            game?.PauseGame();
-        
-        _isPaused = !_isPaused;
+        _p = !_p;
         StateHasChanged();
     }
-    
-    private void ResetGame()
+
+    private void Res()
     {
         game?.ResetGame();
-        message = null;
-        _isPaused = false;
+        _p = false;
+        CalculateGhost();
+        StartGameLoop();
+        _ = container.FocusAsync();
         StateHasChanged();
     }
-    
-    private void MoveLeft()
+
+    private void OnKeyDown(KeyboardEventArgs e)
     {
-        game?.MoveLeft();
-        StateHasChanged();
+        if (game == null || !game.IsPlaying || _p) return;
+        
+        var now = DateTime.Now;
+        switch (e.Key)
+        {
+            case "ArrowLeft": case "a": case "A":
+                Left();
+                break;
+            case "ArrowRight": case "d": case "D":
+                Right();
+                break;
+            case "ArrowDown": case "s": case "S":
+                if ((now - _lastDownPress).TotalMilliseconds < 300)
+                {
+                    HardDrop();
+                }
+                else
+                {
+                    Drop();
+                }
+                _lastDownPress = now;
+                break;
+            case "ArrowUp": case "w": case "W": case " ":
+                Rot();
+                break;
+        }
     }
-    
-    private void MoveRight()
-    {
-        game?.MoveRight();
-        StateHasChanged();
-    }
-    
-    private void SoftDrop()
-    {
-        game?.MoveDown();
-        StateHasChanged();
-    }
-    
-    private void Rotate()
-    {
-        game?.Rotate();
-        StateHasChanged();
-    }
-    
+
+    private void Left() { if (game?.IsPlaying == true && !_p) { game.MoveLeft(); CalculateGhost(); StateHasChanged(); } }
+    private void Right() { if (game?.IsPlaying == true && !_p) { game.MoveRight(); CalculateGhost(); StateHasChanged(); } }
+    private void Drop() { if (game?.IsPlaying == true && !_p) { game.MoveDown(); CalculateGhost(); StateHasChanged(); } }
+    private void Rot() { if (game?.IsPlaying == true && !_p) { game.Rotate(); CalculateGhost(); StateHasChanged(); } }
+    private void HardDrop() { if (game?.IsPlaying == true && !_p) { while (game.MoveDown()) { } CalculateGhost(); StateHasChanged(); } }
+
     public void Dispose()
     {
-        gameLoop?.Dispose();
-        GameService.OnStateChanged -= HandleStateChanged;
+        _cts?.Cancel();
+        _cts?.Dispose();
+        GameService.OnStateChanged -= SC;
     }
 }
