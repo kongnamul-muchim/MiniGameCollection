@@ -1,0 +1,5 @@
+{
+  "buildCommand": "dotnet publish MiniGameCollection.Web -c Release -o wwwroot",
+  "outputDirectory": "wwwroot/wwwroot",
+  "installCommand": "dotnet --version"
+}
