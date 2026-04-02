@@ -29,10 +29,10 @@ public class TetrisGame : IGame
     public int Level => _logic.GetLevel();
     public int LinesCleared => _logic.GetLinesCleared();
 
-    public TetrisGame(TetrisLogic logic)
+    public TetrisGame(TetrisLogic logic, IStateManager? stateManager = null)
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
-        _stateManager = new StateManager(new DefaultStateTransitionRule());
+        _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
         
         _stateManager.OnStateChanged += (prev, current) =>
         {

@@ -61,10 +61,32 @@ public class ChessLogic
     public bool MakeMove(ChessMove move)
     {
         if (_state.IsGameOver) return false;
-        if (!_validator.IsValidMove(Board, move, _state.CurrentColor)) return false;
+        if (!_validator.IsValidMove(Board, move, _state.CurrentColor, _state)) return false;
         
         // Check if move leaves own king in check
         if (WouldBeInCheck(move, _state.CurrentColor)) return false;
+        
+        // Handle castling
+        if (move.IsCastling)
+        {
+            int kingRow = move.From.Row;
+            if (move.To.Column == 6) // King-side
+            {
+                Board.Cells[kingRow, 5] = Board.Cells[kingRow, 7];
+                Board.Cells[kingRow, 7] = null;
+            }
+            else // Queen-side
+            {
+                Board.Cells[kingRow, 3] = Board.Cells[kingRow, 0];
+                Board.Cells[kingRow, 0] = null;
+            }
+        }
+        
+        // Handle en passant capture
+        if (move.IsEnPassant)
+        {
+            Board.Cells[move.From.Row, move.To.Column] = null;
+        }
         
         Board.MovePiece(move.From.Row, move.From.Column, move.To.Row, move.To.Column);
         
@@ -79,16 +101,51 @@ public class ChessLogic
             }
         }
         
+        // Update castling rights
+        if (movedPiece?.Type == PieceType.King)
+        {
+            if (_state.CurrentColor == PieceColor.White)
+            {
+                _state.WhiteKingSideCastle = false;
+                _state.WhiteQueenSideCastle = false;
+            }
+            else
+            {
+                _state.BlackKingSideCastle = false;
+                _state.BlackQueenSideCastle = false;
+            }
+        }
+        if (movedPiece?.Type == PieceType.Rook)
+        {
+            if (move.From.Row == 7 && move.From.Column == 0) _state.WhiteQueenSideCastle = false;
+            if (move.From.Row == 7 && move.From.Column == 7) _state.WhiteKingSideCastle = false;
+            if (move.From.Row == 0 && move.From.Column == 0) _state.BlackQueenSideCastle = false;
+            if (move.From.Row == 0 && move.From.Column == 7) _state.BlackKingSideCastle = false;
+        }
+        // If a rook is captured
+        if (move.To.Row == 7 && move.To.Column == 0) _state.WhiteQueenSideCastle = false;
+        if (move.To.Row == 7 && move.To.Column == 7) _state.WhiteKingSideCastle = false;
+        if (move.To.Row == 0 && move.To.Column == 0) _state.BlackQueenSideCastle = false;
+        if (move.To.Row == 0 && move.To.Column == 7) _state.BlackKingSideCastle = false;
+        
+        // Update en passant target
+        _state.EnPassantTarget = null;
+        if (movedPiece?.Type == PieceType.Pawn && Math.Abs(move.To.Row - move.From.Row) == 2)
+        {
+            int epRow = (move.From.Row + move.To.Row) / 2;
+            _state.EnPassantTarget = new Position(epRow, move.From.Column);
+        }
+        
         // Check for checkmate
         var enemyColor = _state.CurrentColor == PieceColor.White ? PieceColor.Black : PieceColor.White;
-        if (_validator.IsCheckmate(Board, enemyColor))
+        if (_validator.IsCheckmate(Board, enemyColor, _state))
         {
             _state.SetWinner(_state.CurrentPlayer);
             return true;
         }
         
         // Check for stalemate
-        if (_validator.IsStalemate(Board, enemyColor))
+        if (_validator.IsStalemate(Board, enemyColor, _state))
         {
             _state.IsGameOver = true;
             _state.Winner = null; // Draw
@@ -101,20 +158,28 @@ public class ChessLogic
     
     private bool WouldBeInCheck(ChessMove move, PieceColor color)
     {
-        // Simulate move
-        var piece = Board.GetPiece(move.From.Row, move.From.Column);
-        var captured = Board.GetPiece(move.To.Row, move.To.Column);
+        // Clone board to avoid modifying the actual board
+        var tempBoard = new ChessPiece?[8, 8];
+        for (int r = 0; r < 8; r++)
+            for (int c = 0; c < 8; c++)
+                tempBoard[r, c] = Board.Cells[r, c];
         
-        Board.Cells[move.To.Row, move.To.Column] = piece;
-        Board.Cells[move.From.Row, move.From.Column] = null;
+        var piece = tempBoard[move.From.Row, move.From.Column];
+        var captured = tempBoard[move.To.Row, move.To.Column];
         
-        bool inCheck = _validator.IsInCheck(Board, color);
+        // Handle en passant
+        ChessPiece? epCaptured = null;
+        if (move.IsEnPassant)
+        {
+            epCaptured = tempBoard[move.From.Row, move.To.Column];
+            tempBoard[move.From.Row, move.To.Column] = null;
+        }
         
-        // Undo move
-        Board.Cells[move.From.Row, move.From.Column] = piece;
-        Board.Cells[move.To.Row, move.To.Column] = captured;
+        tempBoard[move.To.Row, move.To.Column] = piece;
+        tempBoard[move.From.Row, move.From.Column] = null;
         
-        return inCheck;
+        var adapter = new TempBoardAdapter(tempBoard);
+        return _validator.IsInCheck(adapter, color);
     }
     
     /// <summary>
@@ -192,8 +257,8 @@ public class ChessAIState : IGameState
     public ChessPiece?[,] Board { get; }
     public PieceColor CurrentColor { get; }
     public int CurrentPlayer => CurrentColor == PieceColor.White ? 1 : 2;
-    public bool IsGameOver { get; }
-    public int? Winner { get; }
+    public bool IsGameOver { get; private set; }
+    public int? Winner { get; private set; }
     
     public ChessAIState(ChessPiece?[,] board, PieceColor currentColor)
     {
@@ -201,6 +266,12 @@ public class ChessAIState : IGameState
         CurrentColor = currentColor;
         IsGameOver = false;
         Winner = null;
+    }
+    
+    public void SetWinner(int player)
+    {
+        Winner = player;
+        IsGameOver = true;
     }
 }
 
@@ -211,7 +282,7 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
 {
     private static readonly ChessValidator _validator = new();
     
-    // Piece values
+    // Piece values - tuned for stronger play
     private static readonly Dictionary<PieceType, int> PieceValues = new()
     {
         { PieceType.Pawn, 100 },
@@ -222,7 +293,7 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
         { PieceType.King, 20000 }
     };
     
-    // Piece-square tables for positional evaluation
+    // Piece-square tables - tuned for strategic play
     private static readonly int[,] PawnTable = {
         { 0,  0,  0,  0,  0,  0,  0,  0},
         {50, 50, 50, 50, 50, 50, 50, 50},
@@ -248,12 +319,23 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
     private static readonly int[,] BishopTable = {
         {-20,-10,-10,-10,-10,-10,-10,-20},
         {-10,  0,  0,  0,  0,  0,  0,-10},
-        {-10,  0, 10, 10, 10, 10,  0,-10},
+        {-10,  0,  5, 10, 10,  5,  0,-10},
         {-10,  5,  5, 10, 10,  5,  5,-10},
         {-10,  0, 10, 10, 10, 10,  0,-10},
         {-10, 10, 10, 10, 10, 10, 10,-10},
         {-10,  5,  0,  0,  0,  0,  5,-10},
         {-20,-10,-10,-10,-10,-10,-10,-20}
+    };
+    
+    private static readonly int[,] RookTable = {
+        { 0,  0,  0,  0,  0,  0,  0,  0},
+        { 5, 10, 10, 10, 10, 10, 10,  5},
+        {-5,  0,  0,  0,  0,  0,  0, -5},
+        {-5,  0,  0,  0,  0,  0,  0, -5},
+        {-5,  0,  0,  0,  0,  0,  0, -5},
+        {-5,  0,  0,  0,  0,  0,  0, -5},
+        {-5,  0,  0,  0,  0,  0,  0, -5},
+        { 0,  0,  0,  5,  5,  0,  0,  0}
     };
     
     private static readonly int[,] QueenTable = {
@@ -276,6 +358,17 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
         {-10,-20,-20,-20,-20,-20,-20,-10},
         { 20, 20,  0,  0,  0,  0, 20, 20},
         { 20, 30, 10,  0,  0, 10, 30, 20}
+    };
+    
+    private static readonly int[,] KingEndTable = {
+        {-50,-40,-30,-20,-20,-30,-40,-50},
+        {-30,-20,-10,  0,  0,-10,-20,-30},
+        {-30,-10, 20, 30, 30, 20,-10,-30},
+        {-30,-10, 30, 40, 40, 30,-10,-30},
+        {-30,-10, 30, 40, 40, 30,-10,-30},
+        {-30,-10, 20, 30, 30, 20,-10,-30},
+        {-30,-30,  0,  0,  0,  0,-30,-30},
+        {-50,-30,-30,-30,-30,-30,-30,-50}
     };
     
     public int Evaluate(IGameState state)
@@ -338,7 +431,6 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
                             var move = new ChessMove(new Position(r, c), new Position(tr, tc));
                             if (IsValidMoveForAI(cs.Board, move, cs.CurrentColor))
                             {
-                                // Quick score for move ordering
                                 int score = 0;
                                 var captured = cs.Board[tr, tc];
                                 if (captured != null)
@@ -346,6 +438,18 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
                                 moves.Add((move, score));
                             }
                         }
+                    }
+                    
+                    // Castling
+                    if (cs.Board[r, c]!.Type == PieceType.King)
+                    {
+                        var ksMove = new ChessMove(new Position(r, c), new Position(r, 6), isCastling: true);
+                        if (IsValidMoveForAI(cs.Board, ksMove, cs.CurrentColor))
+                            moves.Add((ksMove, 60));
+                        
+                        var qsMove = new ChessMove(new Position(r, c), new Position(r, 2), isCastling: true);
+                        if (IsValidMoveForAI(cs.Board, qsMove, cs.CurrentColor))
+                            moves.Add((qsMove, 60));
                     }
                 }
             }
@@ -367,7 +471,7 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
         if (target != null && target.Color == color) return false;
         
         // Use validator logic
-        var tempBoard = new TempChessBoard(board);
+        var tempBoard = new TempBoardAdapter(board);
         return _validator.IsValidMove(tempBoard, move, color);
     }
     
@@ -400,13 +504,13 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
 }
 
 /// <summary>
-/// Temporary board wrapper for validator.
+/// Temporary board adapter for validation.
 /// </summary>
-public class TempChessBoard : ChessBoard
+public class TempBoardAdapter : ChessBoard
 {
     private readonly ChessPiece?[,] _cells;
     
-    public TempChessBoard(ChessPiece?[,] cells)
+    public TempBoardAdapter(ChessPiece?[,] cells)
     {
         _cells = cells;
     }

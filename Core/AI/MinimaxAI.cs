@@ -5,14 +5,15 @@ namespace Core.AI;
 public class MinimaxAI<TMove> : IAIPlayer<TMove>
 {
     private readonly int _maxDepth;
-    private readonly Random _random = new();
+    private readonly Random _random;
 
     public string Difficulty { get; set; } = "Normal";
     public event Action<string>? OnThinking;
 
-    public MinimaxAI(int maxDepth = 3)
+    public MinimaxAI(int maxDepth = 3, Random? random = null)
     {
         _maxDepth = maxDepth;
+        _random = random ?? Random.Shared;
     }
 
     public TMove GetBestMove(IGameState state, IGameStateEvaluator<TMove> evaluator)

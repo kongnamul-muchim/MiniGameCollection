@@ -36,10 +36,10 @@ public class ChessGame : IGame
         return _logic.MakeMove(new Models.ChessMove(new Models.Position(fromRow, fromCol), new Models.Position(toRow, toCol)));
     }
 
-    public ChessGame(ChessLogic logic)
+    public ChessGame(ChessLogic logic, IStateManager? stateManager = null)
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
-        _stateManager = new StateManager(new DefaultStateTransitionRule());
+        _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
         
         _stateManager.OnStateChanged += (prev, current) =>
         {

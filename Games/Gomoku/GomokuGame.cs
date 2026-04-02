@@ -32,10 +32,10 @@ public class GomokuGame : IGame
     public string? AIDifficulty => _logic.AIDifficulty;
     public bool AIIsBlack => _logic.AIIsBlack;
 
-    public GomokuGame(GomokuLogic logic)
+    public GomokuGame(GomokuLogic logic, IStateManager? stateManager = null)
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
-        _stateManager = new StateManager(new DefaultStateTransitionRule());
+        _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
         
         _stateManager.OnStateChanged += (prev, current) =>
         {

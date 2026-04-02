@@ -34,22 +34,22 @@
     }
 
     <div class="chess-board">
-        @for (int r = 0; r < 8; r++)
+        @for (int i = 0; i < 8; i++)
         {
-            var row = r;
+            int r = _flipBoard ? 7 - i : i;
             <div class="chess-row">
-                @for (int c = 0; c < 8; c++)
+                @for (int j = 0; j < 8; j++)
                 {
-                    var col = c;
-                    var piece = game.GetPiece(row, col);
-                    var isLight = (row + col) % 2 == 0;
-                    var isSelected = selectedRow == row && selectedCol == col;
-                    var isLastMove = (lastMove.FromRow == row && lastMove.FromCol == col) ||
-                                     (lastMove.ToRow == row && lastMove.ToCol == col);
-                    var isValidTarget = validMoves.Any(m => m.Row == row && m.Col == col);
+                    int c = _flipBoard ? 7 - j : j;
+                    var piece = game.GetPiece(r, c);
+                    var isLight = (r + c) % 2 == 0;
+                    var isSelected = selectedRow == r && selectedCol == c;
+                    var isLastMove = (lastMove.FromRow == r && lastMove.FromCol == c) ||
+                                     (lastMove.ToRow == r && lastMove.ToCol == c);
+                    var isValidTarget = validMoves.Any(m => m.Row == r && m.Col == c);
                     
                     <div class="chess-cell @(isLight ? "light" : "dark") @(isSelected ? "selected" : "") @(isLastMove ? "last-move" : "") @(isValidTarget ? "valid-move" : "")"
-                         @onclick="() => SelectSquare(row, col)">
+                         @onclick="() => SelectSquare(r, c)">
                         @if (piece != null && piece.Type != PieceType.None)
                         {
                             <span class="chess-piece">@GetPieceSymbol(piece)</span>
@@ -107,6 +107,7 @@ else
     private int _aiDepth = 2;
     private bool aiThinking = false;
     private bool _aiFirstMoveDone = false;
+    private bool _flipBoard = false;
     private (int FromRow, int FromCol, int ToRow, int ToCol) lastMove = (-1, -1, -1, -1);
     private List<(int Row, int Col)> validMoves = new();
     
@@ -134,6 +135,11 @@ else
         selectedCol = -1;
         GameService.StartGame(game);
         game.StartGame();
+        
+        // Flip board so user's color is at bottom
+        // AI is White → user is Black → flip (Black at bottom)
+        // AI is Black → user is White → no flip (White at bottom)
+        _flipBoard = useAI && game.AIIsWhite;
     }
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -199,60 +205,64 @@ else
         var piece = game.GetPiece(row, col);
         var myColor = game.IsWhiteTurn ? PieceColor.White : PieceColor.Black;
         
-        // If a piece is already selected, try to move
+        // If a piece is already selected
         if (selectedRow >= 0)
         {
+            // Check if clicking on a valid move target
+            if (validMoves.Any(m => m.Row == row && m.Col == col))
+            {
+                // Move the piece
+                if (game.MakeMove(selectedRow, selectedCol, row, col))
+                {
+                    lastMove = (selectedRow, selectedCol, row, col);
+                    selectedRow = -1;
+                    selectedCol = -1;
+                    validMoves.Clear();
+                    StateHasChanged();
+                    
+                    // AI's turn
+                    if (game.HasAI && !game.IsGameOver && game.IsAITurn())
+                    {
+                        aiThinking = true;
+                        StateHasChanged();
+                        
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(200);
+                            await InvokeAsync(() =>
+                            {
+                                if (game != null)
+                                {
+                                    var result = game.MakeAIMoveWithPosition();
+                                    if (result.HasValue && result.Value.success)
+                                    {
+                                        lastMove = (result.Value.fromRow, result.Value.fromCol, result.Value.toRow, result.Value.toCol);
+                                    }
+                                }
+                                aiThinking = false;
+                                StateHasChanged();
+                            });
+                        });
+                    }
+                }
+                return;
+            }
+            
             // If clicking on own piece, reselect
             if (piece?.Color == myColor)
             {
                 selectedRow = row;
                 selectedCol = col;
-                validMoves = GetValidMovesForPiece(row, col);
+                validMoves = GetValidMovesFromValidator(row, col);
                 StateHasChanged();
                 return;
             }
             
-            // Try to move
-            if (game.MakeMove(selectedRow, selectedCol, row, col))
-            {
-                lastMove = (selectedRow, selectedCol, row, col);
-                selectedRow = -1;
-                selectedCol = -1;
-                validMoves.Clear();
-                StateHasChanged();
-                
-                // AI's turn
-                if (game.HasAI && !game.IsGameOver && game.IsAITurn())
-                {
-                    aiThinking = true;
-                    StateHasChanged();
-                    
-                    _ = Task.Run(async () =>
-                    {
-                        await Task.Delay(200);
-                        await InvokeAsync(() =>
-                        {
-                            if (game != null)
-                            {
-                                var result = game.MakeAIMoveWithPosition();
-                                if (result.HasValue && result.Value.success)
-                                {
-                                    lastMove = (result.Value.fromRow, result.Value.fromCol, result.Value.toRow, result.Value.toCol);
-                                }
-                            }
-                            aiThinking = false;
-                            StateHasChanged();
-                        });
-                    });
-                }
-            }
-            else
-            {
-                selectedRow = -1;
-                selectedCol = -1;
-                validMoves.Clear();
-                StateHasChanged();
-            }
+            // Clicking on invalid target - deselect
+            selectedRow = -1;
+            selectedCol = -1;
+            validMoves.Clear();
+            StateHasChanged();
         }
         else
         {
@@ -261,40 +271,28 @@ else
             {
                 selectedRow = row;
                 selectedCol = col;
-                validMoves = GetValidMovesForPiece(row, col);
+                validMoves = GetValidMovesFromValidator(row, col);
             }
             StateHasChanged();
         }
     }
     
-    private List<(int Row, int Col)> GetValidMovesForPiece(int row, int col)
+    private bool WouldBeInCheck(ChessBoard board, ChessMove move, PieceColor color)
     {
-        var moves = new List<(int, int)>();
-        if (game == null) return moves;
-        
+        // Clone board to avoid modifying the actual board
+        var tempCells = new ChessPiece?[8, 8];
         for (int r = 0; r < 8; r++)
-        {
             for (int c = 0; c < 8; c++)
-            {
-                // Try the move
-                var tempPiece = game.GetPiece(r, c);
-                var movingPiece = game.GetPiece(row, col);
-                if (movingPiece == null) continue;
-                
-                // Check if target is own piece
-                if (tempPiece?.Color == movingPiece.Color) continue;
-                
-                if (game.MakeMove(row, col, r, c))
-                {
-                    moves.Add((r, c));
-                    // Undo by resetting... this is hacky but works for display
-                    // Better: use validator directly
-                }
-            }
-        }
+                tempCells[r, c] = board.Cells[r, c];
         
-        // Better approach: use validator directly
-        return GetValidMovesFromValidator(row, col);
+        var piece = tempCells[move.From.Row, move.From.Column];
+        var captured = tempCells[move.To.Row, move.To.Column];
+        
+        tempCells[move.To.Row, move.To.Column] = piece;
+        tempCells[move.From.Row, move.From.Column] = null;
+        
+        var adapter = new TempBoardAdapter(tempCells);
+        return new ChessValidator().IsInCheck(adapter, color);
     }
     
     private List<(int Row, int Col)> GetValidMovesFromValidator(int row, int col)
@@ -322,22 +320,6 @@ else
         }
         
         return moves;
-    }
-    
-    private bool WouldBeInCheck(ChessBoard board, ChessMove move, PieceColor color)
-    {
-        var piece = board.GetPiece(move.From.Row, move.From.Column);
-        var captured = board.GetPiece(move.To.Row, move.To.Column);
-        
-        board.Cells[move.To.Row, move.To.Column] = piece;
-        board.Cells[move.From.Row, move.From.Column] = null;
-        
-        bool inCheck = new ChessValidator().IsInCheck(board, color);
-        
-        board.Cells[move.From.Row, move.From.Column] = piece;
-        board.Cells[move.To.Row, move.To.Column] = captured;
-        
-        return inCheck;
     }
     
     private async void StartGame()

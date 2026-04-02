@@ -1,0 +1,154 @@
+@page "/sudoku"
+@inject IGameStateService GameService
+@implements IDisposable
+
+<PageTitle>Sudoku</PageTitle>
+
+<h1>Sudoku</h1>
+
+@if (game != null)
+{
+    <div class="game-container">
+        <div class="game-info">
+            <span>Mistakes: @mistakes</span>
+        </div>
+        
+        <div class="sudoku-board">
+            @for (int r = 0; r < 9; r++)
+            {
+                <div class="sudoku-row">
+                    @for (int c = 0; c < 9; c++)
+                    {
+                        var value = game.Board?.Cells[r, c] ?? 0;
+                        var isFixed = game.Board?.IsFixed(r, c) ?? false;
+                        var isSelected = selectedRow == r && selectedCol == c;
+                        var boxBorderR = r % 3 == 2 ? " border-bottom" : "";
+                        var boxBorderC = c % 3 == 2 ? " border-right" : "";
+                        
+                        <div class="sudoku-cell@(boxBorderR)@(boxBorderC) @(isSelected ? "selected" : "") @(isFixed ? "fixed" : "")"
+                             @onclick="@(() => SelectCell(r, c))">
+                            @if (value > 0)
+                            {
+                                @value
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        
+        <div class="number-pad">
+            @for (int i = 1; i <= 9; i++)
+            {
+                <button class="number-btn" @onclick="@(() => PlaceNumber(i))">@i</button>
+            }
+            <button class="number-btn number-btn-clear" @onclick="@(() => PlaceNumber(0))">⌫</button>
+        </div>
+        
+        <div class="game-controls">
+            @if (!game.IsPlaying)
+            {
+                <button class="btn btn-primary" @onclick="StartNewGame">New Game</button>
+            }
+            else
+            {
+                <button class="btn btn-secondary" @onclick="TogglePause">@(_isPaused ? "Resume" : "Pause")</button>
+                <button class="btn btn-danger" @onclick="ResetGame">Reset</button>
+            }
+        </div>
+        
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="game-message">@message</div>
+        }
+    </div>
+}
+else
+{
+    <p>Loading game...</p>
+}
+
+@code {
+    private SudokuGame? game;
+    private int selectedRow = -1;
+    private int selectedCol = -1;
+    private int mistakes = 0;
+    private bool _isPaused = false;
+    private string? message;
+    
+    protected override void OnInitialized()
+    {
+        var generator = new Games.Sudoku.Logic.SudokuGenerator(new Random());
+        var validator = new Games.Sudoku.Logic.SudokuValidator();
+        var logic = new Games.Sudoku.Logic.SudokuLogic(generator, validator);
+        game = new SudokuGame(logic);
+        GameService.StartGame(game);
+        GameService.OnStateChanged += HandleStateChanged;
+    }
+    
+    private void HandleStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+    
+    private void SelectCell(int row, int col)
+    {
+        if (!game?.IsPlaying ?? true) return;
+        if (game.Board?.IsFixed(row, col) ?? true) return;
+        
+        selectedRow = row;
+        selectedCol = col;
+        StateHasChanged();
+    }
+    
+    private void PlaceNumber(int value)
+    {
+        if (selectedRow < 0 || selectedCol < 0 || game == null) return;
+        
+        var result = game.PlaceNumber(selectedRow, selectedCol, value);
+        if (!result && value > 0)
+        {
+            mistakes++;
+        }
+        
+        selectedRow = -1;
+        selectedCol = -1;
+        StateHasChanged();
+    }
+    
+    private void StartNewGame()
+    {
+        game?.NewGame(1);
+        message = null;
+        mistakes = 0;
+        selectedRow = -1;
+        selectedCol = -1;
+        StateHasChanged();
+    }
+    
+    private void TogglePause()
+    {
+        if (_isPaused)
+            game?.ResumeGame();
+        else
+            game?.PauseGame();
+        
+        _isPaused = !_isPaused;
+        StateHasChanged();
+    }
+    
+    private void ResetGame()
+    {
+        game?.NewGame(1);
+        message = null;
+        mistakes = 0;
+        selectedRow = -1;
+        selectedCol = -1;
+        StateHasChanged();
+    }
+    
+    public void Dispose()
+    {
+        GameService.OnStateChanged -= HandleStateChanged;
+    }
+}

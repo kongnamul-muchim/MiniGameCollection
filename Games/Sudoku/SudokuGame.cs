@@ -24,10 +24,10 @@ public class SudokuGame : IGame
     public SudokuLogic Logic => _logic;
     public Games.Sudoku.Models.SudokuBoard? Board => _logic.Board;
 
-    public SudokuGame(SudokuLogic logic)
+    public SudokuGame(SudokuLogic logic, IStateManager? stateManager = null)
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
-        _stateManager = new StateManager(new Core.State.DefaultStateTransitionRule());
+        _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
         
         _stateManager.OnStateChanged += (prev, current) =>
         {

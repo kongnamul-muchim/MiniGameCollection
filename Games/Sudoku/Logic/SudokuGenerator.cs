@@ -6,7 +6,7 @@ public class SudokuGenerator : ISudokuGenerator
     
     public SudokuGenerator(Random random)
     {
-        _random = random;
+        _random = random ?? throw new ArgumentNullException(nameof(random));
     }
     
     public int[,] GeneratePuzzle(int difficulty)

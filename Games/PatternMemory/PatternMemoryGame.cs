@@ -20,10 +20,10 @@ public class PatternMemoryGame : IGame
 
     public event Action<GameEvent>? OnGameEvent;
 
-    public PatternMemoryGame(PatternMemoryLogic logic)
+    public PatternMemoryGame(PatternMemoryLogic logic, IStateManager? stateManager = null)
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
-        _stateManager = new StateManager(new DefaultStateTransitionRule());
+        _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
         
         _stateManager.OnStateChanged += (prev, current) =>
         {

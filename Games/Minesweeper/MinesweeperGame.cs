@@ -31,10 +31,10 @@ public class MinesweeperGame : IGame
     public int MineCount => _logic is { Board: var b } ? b.Cells.Cast<Models.Cell>().Count(c => c.IsMine) : 10;
     public int RevealedCount => _logic is { Board: var b } ? b.Cells.Cast<Models.Cell>().Count(c => c.IsRevealed) : 0;
 
-    public MinesweeperGame(MinesweeperLogic logic)
+    public MinesweeperGame(MinesweeperLogic logic, IStateManager? stateManager = null)
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
-        _stateManager = new StateManager(new DefaultStateTransitionRule());
+        _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
         
         _stateManager.OnStateChanged += (prev, current) =>
         {
