@@ -10,17 +10,27 @@ public class GomokuBoard
         Cells = new int[15, 15];
     }
     
-    public void SetCell(int row, int col, int value)
+    public GomokuBoard(int size)
+    {
+        Cells = new int[size, size];
+    }
+    
+    public virtual void SetCell(int row, int col, int value)
     {
         if (row >= 0 && row < Size && col >= 0 && col < Size)
             Cells[row, col] = value;
     }
     
-    public int GetCell(int row, int col) => Cells[row, col];
+    public virtual int GetCell(int row, int col)
+    {
+        if (row < 0 || row >= Size || col < 0 || col >= Size)
+            return 0;
+        return Cells[row, col];
+    }
     
-    public void Clear() => Array.Clear(Cells, 0, Cells.Length);
+    public virtual void Clear() => Array.Clear(Cells, 0, Cells.Length);
     
-    public bool IsEmpty(int row, int col) => Cells[row, col] == 0;
+    public virtual bool IsEmpty(int row, int col) => GetCell(row, col) == 0;
     
     public GomokuBoard Clone()
     {

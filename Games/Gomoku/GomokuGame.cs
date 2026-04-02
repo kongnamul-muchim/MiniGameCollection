@@ -4,6 +4,7 @@ using Core.Events;
 using Core.Interfaces;
 using Core.State;
 using Games.Gomoku.Logic;
+using Games.Gomoku.Models;
 
 namespace Games.Gomoku;
 
@@ -22,9 +23,13 @@ public class GomokuGame : IGame
     
     // Expose logic and board for web UI
     public GomokuLogic Logic => _logic;
-    public Models.GomokuBoard Board => _logic.Board;
+    public GomokuBoard Board => _logic.Board;
     public int CurrentPlayer => _logic.CurrentPlayer;
     public bool IsBlackTurn => _logic.CurrentPlayer == 1;
+    public bool IsGameOver => _logic.IsGameOver;
+    public int? Winner => _logic.Winner;
+    public bool HasAI => _logic.HasAI;
+    public string? AIDifficulty => _logic.AIDifficulty;
 
     public GomokuGame(GomokuLogic logic)
     {
@@ -36,6 +41,16 @@ public class GomokuGame : IGame
             var evt = new GameStateChangedEvent(prev, current);
             OnGameEvent?.Invoke(evt);
         };
+    }
+    
+    /// <summary>
+    /// Create a new GomokuGame with AI opponent.
+    /// </summary>
+    public static GomokuGame CreateWithAI(int aiDepth = 3)
+    {
+        var validator = new GomokuValidator();
+        var logic = new GomokuLogic(validator, useAI: true, aiDepth: aiDepth);
+        return new GomokuGame(logic);
     }
 
     public void StartGame()
@@ -63,7 +78,43 @@ public class GomokuGame : IGame
     
     public bool PlaceStone(int row, int col)
     {
-        return _logic.PlaceStone(row, col);
+        var result = _logic.PlaceStone(row, col);
+        
+        // Check for game over
+        if (_logic.IsGameOver && _logic.Winner.HasValue)
+        {
+            if (_logic.Winner == 1)
+                _stateManager.ChangeState(GameState.Victory);
+            else
+                _stateManager.ChangeState(GameState.GameOver);
+        }
+        
+        return result;
+    }
+    
+    /// <summary>
+    /// Get AI's move and apply it.
+    /// </summary>
+    public (bool success, int row, int col)? MakeAIMoveWithPosition()
+    {
+        if (!_logic.HasAI || _logic.IsGameOver || !IsPlaying)
+            return null;
+        
+        var move = _logic.GetAIMove();
+        if (move == null)
+            return null;
+        
+        var result = PlaceStone(move.Row, move.Column);
+        return (result, move.Row, move.Column);
+    }
+    
+    /// <summary>
+    /// Get AI's move and apply it.
+    /// </summary>
+    public bool MakeAIMove()
+    {
+        var result = MakeAIMoveWithPosition();
+        return result?.success ?? false;
     }
 
     public void EndGame()
@@ -75,7 +126,8 @@ public class GomokuGame : IGame
     {
         return JsonSerializer.Serialize(new
         {
-            State = _stateManager.CurrentState
+            State = _stateManager.CurrentState,
+            CurrentPlayer = _logic.CurrentPlayer
         });
     }
 

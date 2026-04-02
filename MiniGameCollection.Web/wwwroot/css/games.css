@@ -410,10 +410,12 @@
     flex-direction: column;
     align-items: center;
     margin: 1.5rem auto;
-    background: #dcb35c;
-    padding: 1.5rem;
+    background: linear-gradient(135deg, #dcb35c 0%, #c9a24d 100%);
+    padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    width: fit-content;
+    min-width: fit-content;
 }
 
 .gomoku-row {
@@ -421,21 +423,25 @@
 }
 
 .gomoku-cell {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     position: relative;
+    flex-shrink: 0;
 }
 
+/* Grid lines - centered on cell borders */
 .gomoku-cell::before {
     content: '';
     position: absolute;
     width: 100%;
     height: 1px;
-    background: #333;
+    background: rgba(0, 0, 0, 0.5);
+    top: 50%;
+    left: 0;
 }
 
 .gomoku-cell::after {
@@ -443,15 +449,41 @@
     position: absolute;
     height: 100%;
     width: 1px;
-    background: #333;
+    background: rgba(0, 0, 0, 0.5);
+    left: 50%;
+    top: 0;
+}
+
+/* Edge cells - hide outer grid lines */
+.gomoku-row:first-child .gomoku-cell::after {
+    top: 50%;
+    height: 50%;
+}
+
+.gomoku-row:last-child .gomoku-cell::after {
+    height: 50%;
+}
+
+.gomoku-cell:first-child::before {
+    left: 50%;
+    width: 50%;
+}
+
+.gomoku-cell:last-child::before {
+    width: 50%;
 }
 
 .stone {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     z-index: 1;
-    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+    transition: transform 0.1s ease;
+}
+
+.stone:hover {
+    transform: scale(1.05);
 }
 
 .stone-black {
@@ -465,6 +497,78 @@
 
 .gomoku-cell.last-move {
     background: rgba(0, 255, 0, 0.3);
+}
+
+.gomoku-cell.last-move .stone {
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+}
+
+/* Winner message for Gomoku */
+.game-message.winner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    margin: 1rem auto;
+    max-width: 300px;
+    animation: winnerPulse 1s ease-in-out infinite;
+}
+
+@keyframes winnerPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+/* AI Status */
+.ai-status {
+    color: #f0a000;
+    font-weight: 600;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Mode selector */
+.mode-selector {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem auto;
+    flex-wrap: wrap;
+}
+
+.mode-selector span {
+    font-weight: 600;
+    color: #555;
+}
+
+.mode-btn {
+    padding: 0.5rem 1.25rem;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.mode-btn:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.mode-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #764ba2;
 }
 
 /* ========================================
@@ -756,8 +860,18 @@
     }
     
     .gomoku-cell {
-        width: 35px;
-        height: 35px;
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+    }
+    
+    .stone {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .gomoku-board {
+        padding: 15px;
     }
     
     .minesweeper-cell {
@@ -845,11 +959,16 @@
     .gomoku-cell {
         width: 25px;
         height: 25px;
+        flex-shrink: 0;
     }
     
     .stone {
         width: 20px;
         height: 20px;
+    }
+    
+    .gomoku-board {
+        padding: 10px;
     }
     
     .minesweeper-cell {
