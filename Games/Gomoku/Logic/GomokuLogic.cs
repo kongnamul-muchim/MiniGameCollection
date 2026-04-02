@@ -75,22 +75,29 @@ public class GomokuLogic
     
     /// <summary>
     /// Get AI move using Minimax with depth 2.
+    /// Falls back to heuristic if AI not available.
     /// </summary>
     public GomokuMove? GetAIMove()
     {
-        if (_state.IsGameOver || _ai == null || _evaluator == null)
+        if (_state.IsGameOver)
             return null;
         
-        try
+        // Try Minimax AI if available
+        if (_ai != null && _evaluator != null)
         {
-            var aiState = CreateAIState();
-            return _ai.GetBestMove(aiState, _evaluator);
+            try
+            {
+                var aiState = CreateAIState();
+                return _ai.GetBestMove(aiState, _evaluator);
+            }
+            catch
+            {
+                // Fallback to heuristic
+            }
         }
-        catch
-        {
-            // Fallback: play center or first empty near stones
-            return GetFallbackMove();
-        }
+        
+        // Fallback: play center or first empty near stones
+        return GetFallbackMove();
     }
     
     /// <summary>

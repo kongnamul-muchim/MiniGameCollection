@@ -231,21 +231,28 @@ public class ChessLogic
     
     /// <summary>
     /// Get AI move using Minimax.
+    /// Falls back to random move if AI not available.
     /// </summary>
     public ChessMove? GetAIMove()
     {
-        if (_state.IsGameOver || _ai == null || _evaluator == null)
+        if (_state.IsGameOver)
             return null;
         
-        try
+        // Try Minimax AI if available
+        if (_ai != null && _evaluator != null)
         {
-            var aiState = CreateAIState();
-            return _ai.GetBestMove(aiState, _evaluator);
+            try
+            {
+                var aiState = CreateAIState();
+                return _ai.GetBestMove(aiState, _evaluator);
+            }
+            catch
+            {
+                // Fallback to random
+            }
         }
-        catch
-        {
-            return GetRandomMove();
-        }
+        
+        return GetRandomMove();
     }
     
     /// <summary>
