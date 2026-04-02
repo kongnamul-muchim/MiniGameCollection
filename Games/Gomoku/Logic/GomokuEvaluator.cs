@@ -5,19 +5,24 @@ using Games.Gomoku.Models;
 namespace Games.Gomoku.Logic;
 
 /// <summary>
-/// Evaluator for Gomoku AI using pattern-based scoring.
-/// Implements IGameStateEvaluator for use with MinimaxAI.
+/// Strong pattern-based evaluator for Gomoku AI.
+/// Evaluates all lines on the board for patterns like open-4, closed-4, open-3, etc.
 /// </summary>
 public class GomokuEvaluator : IGameStateEvaluator<GomokuMove>
 {
     private readonly IGomokuValidator _validator;
-    private const int WIN_SCORE = 100000;
-    private const int FOUR_SCORE = 10000;
-    private const int THREE_SCORE = 1000;
-    private const int TWO_SCORE = 100;
     
-    // Direction vectors for checking lines
-    private static readonly (int, int)[] Directions = 
+    // Pattern scores - carefully balanced
+    private const int WIN = 10000000;
+    private const int OPEN_FOUR = 1000000;    // Four with both ends open (guaranteed win)
+    private const int CLOSED_FOUR = 500000;   // Four with one end open (must block!)
+    private const int OPEN_THREE = 100000;    // Three with both ends open (dangerous)
+    private const int CLOSED_THREE = 10000;   // Three with one end open
+    private const int OPEN_TWO = 5000;        // Two with both ends open
+    private const int CLOSED_TWO = 500;       // Two with one end open
+    private const int SINGLE = 50;            // Single stone
+    
+    private static readonly (int dr, int dc)[] Directions = 
     {
         (0, 1),   // Horizontal
         (1, 0),   // Vertical
@@ -32,153 +37,234 @@ public class GomokuEvaluator : IGameStateEvaluator<GomokuMove>
     
     public int Evaluate(IGameState state)
     {
-        var gomokuState = (GomokuAIState)state;
+        var gs = (GomokuAIState)state;
         
-        // If game is over, return win/loss score
-        if (gomokuState.IsGameOver)
+        if (gs.IsGameOver)
         {
-            if (gomokuState.Winner == 1) // Black (AI maximizes for player 1)
-                return WIN_SCORE;
-            else if (gomokuState.Winner == 2) // White
-                return -WIN_SCORE;
-            return 0; // Draw
+            if (gs.Winner == 2) return WIN;   // AI (White) wins
+            if (gs.Winner == 1) return -WIN;  // Human (Black) wins
+            return 0;
         }
         
-        return EvaluateBoard(gomokuState.Board, gomokuState.Size);
+        // Always evaluate from AI's perspective (AI = Player 2 = White)
+        int aiScore = EvaluateForPlayer(gs.Board, gs.Size, 2);
+        int oppScore = EvaluateForPlayer(gs.Board, gs.Size, 1);
+        
+        return aiScore - oppScore;
     }
     
-    private int EvaluateBoard(int[,] board, int size)
+    /// <summary>
+    /// Evaluate the board for a specific player.
+    /// Scans all lines and counts patterns.
+    /// </summary>
+    private int EvaluateForPlayer(int[,] board, int size, int player)
     {
-        int score = 0;
+        int totalScore = 0;
         
-        // Evaluate for both players
-        for (int player = 1; player <= 2; player++)
-        {
-            int playerScore = CountPatterns(board, size, player);
-            if (player == 1)
-                score += playerScore;
-            else
-                score -= playerScore;
-        }
-        
-        // Add center preference
-        int center = size / 2;
-        for (int r = center - 2; r <= center + 2; r++)
-        {
-            for (int c = center - 2; c <= center + 2; c++)
-            {
-                if (r >= 0 && r < size && c >= 0 && c < size)
-                {
-                    if (board[r, c] == 1) score += 5;
-                    else if (board[r, c] == 2) score -= 5;
-                }
-            }
-        }
-        
-        return score;
-    }
-    
-    private int CountPatterns(int[,] board, int size, int player)
-    {
-        int total = 0;
-        
+        // Scan every cell as potential start of a line
         for (int r = 0; r < size; r++)
         {
             for (int c = 0; c < size; c++)
             {
                 foreach (var (dr, dc) in Directions)
                 {
-                    int count = CountLine(board, size, r, c, dr, dc, player);
-                    total += PatternScore(count);
+                    // Only count lines that start at this cell (avoid double counting)
+                    // Check that the cell before this is NOT the player's stone
+                    int pr = r - dr, pc = c - dc;
+                    if (pr >= 0 && pr < size && pc >= 0 && pc < size && board[pr, pc] == player)
+                        continue; // This line will be counted from the actual start
+                    
+                    var pattern = AnalyzeLine(board, size, r, c, dr, dc, player);
+                    totalScore += PatternToScore(pattern);
                 }
             }
         }
         
-        return total;
+        return totalScore;
     }
     
-    private int CountLine(int[,] board, int size, int row, int col, int dr, int dc, int player)
+    /// <summary>
+    /// Analyze a line starting at (r,c) in direction (dr,dc) for the given player.
+    /// Returns (count, openEnds) where openEnds is 0, 1, or 2.
+    /// </summary>
+    private (int count, int openEnds) AnalyzeLine(int[,] board, int size, int r, int c, int dr, int dc, int player)
     {
         int count = 0;
         int openEnds = 0;
         
-        // Check backward
-        int br = row - dr, bc = col - dc;
-        if (br < 0 || br >= size || bc < 0 || bc >= size || board[br, bc] == 0)
-            openEnds++;
-        else if (board[br, bc] == player)
-            return 0; // Part of longer line counted elsewhere
+        // Check if the start is open
+        int sr = r - dr, sc = c - dc;
+        bool startOpen = (sr < 0 || sr >= size || sc < 0 || sc >= size || board[sr, sc] == 0);
         
-        // Count forward
-        for (int i = 0; i < 5; i++)
+        // Count consecutive stones
+        int cr = r, cc = c;
+        while (cr >= 0 && cr < size && cc >= 0 && cc < size && board[cr, cc] == player)
         {
-            int r = row + i * dr, c = col + i * dc;
-            if (r < 0 || r >= size || c < 0 || c >= size)
-                break;
-            if (board[r, c] == player)
-                count++;
-            else if (board[r, c] != 0)
-                break; // Blocked by opponent
+            count++;
+            cr += dr;
+            cc += dc;
         }
         
-        // Check forward end
-        int fr = row + count * dr, fc = col + count * dc;
-        if (fr >= 0 && fr < size && fc >= 0 && fc < size && board[fr, fc] == 0)
-            openEnds++;
+        // Check if the end is open
+        bool endOpen = (cr < 0 || cr >= size || cc < 0 || cc >= size || board[cr, cc] == 0);
         
-        // Score based on count and open ends
-        if (count >= 5) return WIN_SCORE;
-        if (count == 4 && openEnds >= 1) return FOUR_SCORE * openEnds;
-        if (count == 3 && openEnds >= 1) return THREE_SCORE * openEnds;
-        if (count == 2 && openEnds == 2) return TWO_SCORE;
+        if (startOpen) openEnds++;
+        if (endOpen) openEnds++;
         
-        return count;
+        return (count, openEnds);
     }
     
-    private int PatternScore(int count)
+    /// <summary>
+    /// Convert a pattern (count, openEnds) to a score.
+    /// </summary>
+    private int PatternToScore((int count, int openEnds) pattern)
     {
-        return count switch
+        var (count, openEnds) = pattern;
+        
+        if (count >= 5) return WIN;
+        
+        if (count == 4)
         {
-            >= 5 => WIN_SCORE,
-            4 => FOUR_SCORE,
-            3 => THREE_SCORE,
-            2 => TWO_SCORE,
-            _ => 0
-        };
+            if (openEnds >= 2) return OPEN_FOUR;   // Unstoppable
+            if (openEnds == 1) return CLOSED_FOUR;  // Must block
+            return 0; // Blocked on both sides
+        }
+        
+        if (count == 3)
+        {
+            if (openEnds >= 2) return OPEN_THREE;   // Very dangerous
+            if (openEnds == 1) return CLOSED_THREE;
+            return 0;
+        }
+        
+        if (count == 2)
+        {
+            if (openEnds >= 2) return OPEN_TWO;
+            if (openEnds == 1) return CLOSED_TWO;
+            return 0;
+        }
+        
+        if (count == 1)
+        {
+            if (openEnds >= 2) return SINGLE;
+            if (openEnds == 1) return SINGLE / 2;
+            return 0;
+        }
+        
+        return 0;
     }
     
     public IEnumerable<GomokuMove> GetValidMoves(IGameState state)
     {
-        var gomokuState = (GomokuAIState)state;
-        
-        // Limit search to cells near existing stones for efficiency
+        var gs = (GomokuAIState)state;
         var candidates = new List<(GomokuMove Move, int Score)>();
-        int searchRange = 2;
         
-        for (int r = 0; r < gomokuState.Size; r++)
+        // Search range of 2 around existing stones
+        for (int r = 0; r < gs.Size; r++)
         {
-            for (int c = 0; c < gomokuState.Size; c++)
+            for (int c = 0; c < gs.Size; c++)
             {
-                if (gomokuState.Board[r, c] == 0 && HasNeighbor(gomokuState.Board, gomokuState.Size, r, c, searchRange))
+                if (gs.Board[r, c] == 0 && HasNeighbor(gs.Board, gs.Size, r, c, 2))
                 {
-                    int score = EvaluatePosition(gomokuState.Board, gomokuState.Size, r, c);
+                    // Quick heuristic score for move ordering
+                    int score = QuickEvaluate(gs.Board, gs.Size, r, c, gs.CurrentPlayer);
                     candidates.Add((new GomokuMove(r, c), score));
                 }
             }
         }
         
-        // If no candidates (empty board), return center
         if (candidates.Count == 0)
         {
-            int center = gomokuState.Size / 2;
+            int center = gs.Size / 2;
             return new[] { new GomokuMove(center, center) };
         }
         
-        // Sort by potential and take top candidates (reduce branching factor)
+        // Sort by heuristic score and take top candidates
+        // For depth 2, we can afford more candidates
         return candidates
             .OrderByDescending(x => x.Score)
-            .Take(10) // Limit to 10 best moves for performance
+            .Take(15)
             .Select(x => x.Move);
+    }
+    
+    /// <summary>
+    /// Quick heuristic evaluation of placing a stone at (r,c).
+    /// Used for move ordering in GetValidMoves.
+    /// </summary>
+    private int QuickEvaluate(int[,] board, int size, int r, int c, int player)
+    {
+        int score = 0;
+        int opponent = player == 1 ? 2 : 1;
+        
+        foreach (var (dr, dc) in Directions)
+        {
+            // Count own stones in this direction
+            int ownCount = 0, ownOpen = 0;
+            int oppCount = 0, oppOpen = 0;
+            
+            // Forward
+            for (int i = 1; i <= 4; i++)
+            {
+                int nr = r + i * dr, nc = c + i * dc;
+                if (nr < 0 || nr >= size || nc < 0 || nc >= size) break;
+                if (board[nr, nc] == player) ownCount++;
+                else if (board[nr, nc] == opponent) break;
+                else { ownOpen++; break; }
+            }
+            
+            // Backward
+            for (int i = 1; i <= 4; i++)
+            {
+                int nr = r - i * dr, nc = c - i * dc;
+                if (nr < 0 || nr >= size || nc < 0 || nc >= size) break;
+                if (board[nr, nc] == player) ownCount++;
+                else if (board[nr, nc] == opponent) break;
+                else { ownOpen++; break; }
+            }
+            
+            // Score own patterns
+            if (ownCount >= 4) score += 1000000;
+            else if (ownCount == 3 && ownOpen >= 2) score += 100000;
+            else if (ownCount == 3 && ownOpen >= 1) score += 10000;
+            else if (ownCount == 2 && ownOpen >= 2) score += 5000;
+            else if (ownCount == 2 && ownOpen >= 1) score += 500;
+            
+            // Count opponent stones (for blocking)
+            int oppForward = 0, oppBackward = 0;
+            for (int i = 1; i <= 4; i++)
+            {
+                int nr = r + i * dr, nc = c + i * dc;
+                if (nr < 0 || nr >= size || nc < 0 || nc >= size) break;
+                if (board[nr, nc] == opponent) oppForward++;
+                else break;
+            }
+            for (int i = 1; i <= 4; i++)
+            {
+                int nr = r - i * dr, nc = c - i * dc;
+                if (nr < 0 || nr >= size || nc < 0 || nc >= size) break;
+                if (board[nr, nc] == opponent) oppBackward++;
+                else break;
+            }
+            int totalOpp = oppForward + oppBackward;
+            int oppOpenEnds = 0;
+            if (r - dr >= 0 && r - dr < size && c - dc >= 0 && c - dc < size && board[r - dr, c - dc] == 0) oppOpenEnds++;
+            if (r + (oppForward + 1) * dr >= 0 && r + (oppForward + 1) * dr < size && 
+                c + (oppForward + 1) * dc >= 0 && c + (oppForward + 1) * dc < size && 
+                board[r + (oppForward + 1) * dr, c + (oppForward + 1) * dc] == 0) oppOpenEnds++;
+            
+            // Score blocking opponent
+            if (totalOpp >= 4) score += 900000;
+            else if (totalOpp == 3 && oppOpenEnds >= 2) score += 800000;
+            else if (totalOpp == 3 && oppOpenEnds >= 1) score += 50000;
+            else if (totalOpp == 2 && oppOpenEnds >= 2) score += 5000;
+            else if (totalOpp == 2 && oppOpenEnds >= 1) score += 500;
+        }
+        
+        // Center preference
+        int center = size / 2;
+        score += Math.Max(0, 10 - Math.Abs(r - center) - Math.Abs(c - center));
+        
+        return score;
     }
     
     private bool HasNeighbor(int[,] board, int size, int row, int col, int range)
@@ -196,51 +282,24 @@ public class GomokuEvaluator : IGameStateEvaluator<GomokuMove>
         return false;
     }
     
-    private int EvaluatePosition(int[,] board, int size, int row, int col)
-    {
-        int score = 0;
-        int center = size / 2;
-        
-        // Center preference
-        score += 10 - Math.Abs(row - center) - Math.Abs(col - center);
-        
-        // Check potential for each direction
-        foreach (var (dr, dc) in Directions)
-        {
-            int count1 = 0, count2 = 0;
-            for (int i = -4; i <= 4; i++)
-            {
-                int r = row + i * dr, c = col + i * dc;
-                if (r >= 0 && r < size && c >= 0 && c < size)
-                {
-                    if (board[r, c] == 1) count1++;
-                    else if (board[r, c] == 2) count2++;
-                }
-            }
-            score += count1 * 2 + count2 * 2;
-        }
-        
-        return score;
-    }
-    
     public IGameState ApplyMove(IGameState state, GomokuMove move)
     {
-        var gomokuState = (GomokuAIState)state;
-        var newBoard = (int[,])gomokuState.Board.Clone();
+        var gs = (GomokuAIState)state;
+        var newBoard = (int[,])gs.Board.Clone();
         
-        newBoard[move.Row, move.Column] = gomokuState.CurrentPlayer;
+        newBoard[move.Row, move.Column] = gs.CurrentPlayer;
         
         var newState = new GomokuAIState(
             newBoard,
-            gomokuState.Size,
-            gomokuState.CurrentPlayer == 1 ? 2 : 1
+            gs.Size,
+            gs.CurrentPlayer == 1 ? 2 : 1
         );
         
         // Check for win
-        if (_validator.CheckWin(new GomokuBoardAdapter(newBoard, gomokuState.Size), 
-            move.Row, move.Column, gomokuState.CurrentPlayer))
+        if (_validator.CheckWin(new GomokuBoardAdapter(newBoard, gs.Size),
+            move.Row, move.Column, gs.CurrentPlayer))
         {
-            newState.SetWinner(gomokuState.CurrentPlayer);
+            newState.SetWinner(gs.CurrentPlayer);
         }
         
         return newState;

@@ -46,7 +46,7 @@ public class GomokuGame : IGame
     /// <summary>
     /// Create a new GomokuGame with AI opponent.
     /// </summary>
-    public static GomokuGame CreateWithAI(int aiDepth = 3)
+    public static GomokuGame CreateWithAI(int aiDepth = 2)
     {
         var validator = new GomokuValidator();
         var logic = new GomokuLogic(validator, useAI: true, aiDepth: aiDepth);

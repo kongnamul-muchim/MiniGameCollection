@@ -26,8 +26,7 @@ public class GomokuLogic
         if (useAI)
         {
             _evaluator = new GomokuEvaluator(validator);
-            // Limit depth for performance (Gomoku has large board)
-            _ai = new MinimaxAI<GomokuMove>(Math.Min(aiDepth, 3));
+            _ai = new MinimaxAI<GomokuMove>(aiDepth);
             _ai.Difficulty = aiDepth switch
             {
                 1 => "Easy",
@@ -66,140 +65,54 @@ public class GomokuLogic
     }
     
     /// <summary>
-    /// Get AI move - uses Minimax or falls back to heuristic.
+    /// Get AI move using Minimax with depth 2.
     /// </summary>
     public GomokuMove? GetAIMove()
     {
-        if (_state.IsGameOver)
+        if (_state.IsGameOver || _ai == null || _evaluator == null)
             return null;
         
-        // Always use heuristic AI for now (Minimax is too slow for Gomoku)
-        // Minimax works better for smaller games like Tic-Tac-Toe
-        return GetHeuristicAIMove();
+        try
+        {
+            var aiState = CreateAIState();
+            return _ai.GetBestMove(aiState, _evaluator);
+        }
+        catch
+        {
+            // Fallback: play center or first empty near stones
+            return GetFallbackMove();
+        }
     }
     
-    /// <summary>
-    /// Fast heuristic-based AI move selection.
-    /// </summary>
-    private GomokuMove? GetHeuristicAIMove()
+    private GomokuMove? GetFallbackMove()
     {
-        var candidates = new List<(int row, int col, int score)>();
-        
-        // Find cells near existing stones
-        for (int r = 0; r < Board.Size; r++)
-        {
-            for (int c = 0; c < Board.Size; c++)
-            {
-                if (Board.IsEmpty(r, c) && HasNeighbor(r, c))
-                {
-                    int score = EvaluatePositionForAI(r, c);
-                    candidates.Add((r, c, score));
-                }
-            }
-        }
-        
-        if (candidates.Count == 0)
-        {
-            // First move - play center
-            return new GomokuMove(7, 7);
-        }
-        
-        // Return best position
-        var best = candidates.OrderByDescending(x => x.score).First();
-        return new GomokuMove(best.row, best.col);
-    }
-    
-    /// <summary>
-    /// Evaluate a position for AI move selection.
-    /// </summary>
-    private int EvaluatePositionForAI(int row, int col)
-    {
-        int score = 0;
-        int opponent = CurrentPlayer == 1 ? 2 : 1;
-        
-        // Check all directions
-        int[] dr = { 0, 1, 1, 1 };
-        int[] dc = { 1, 0, 1, -1 };
-        
-        for (int d = 0; d < 4; d++)
-        {
-            int ownCount = 0, oppCount = 0;
-            int ownOpenEnds = 0, oppOpenEnds = 0;
-            
-            // Forward direction
-            for (int i = 1; i <= 4; i++)
-            {
-                int r = row + i * dr[d], c = col + i * dc[d];
-                if (r < 0 || r >= Board.Size || c < 0 || c >= Board.Size)
-                {
-                    ownOpenEnds--;
-                    oppOpenEnds--;
-                    break;
-                }
-                int cell = Board.GetCell(r, c);
-                if (cell == CurrentPlayer) ownCount++;
-                else if (cell == opponent) { oppCount++; break; }
-                else { ownOpenEnds++; break; }
-            }
-            
-            // Backward direction
-            for (int i = 1; i <= 4; i++)
-            {
-                int r = row - i * dr[d], c = col - i * dc[d];
-                if (r < 0 || r >= Board.Size || c < 0 || c >= Board.Size)
-                {
-                    ownOpenEnds--;
-                    oppOpenEnds--;
-                    break;
-                }
-                int cell = Board.GetCell(r, c);
-                if (cell == CurrentPlayer) ownCount++;
-                else if (cell == opponent) { oppCount++; break; }
-                else { ownOpenEnds++; break; }
-            }
-            
-            // Score based on patterns
-            // Own patterns (attack)
-            if (ownCount >= 4) score += 1000000; // Win!
-            else if (ownCount == 3 && ownOpenEnds >= 2) score += 100000; // Open 4 guaranteed win
-            else if (ownCount == 3 && ownOpenEnds >= 1) score += 10000; // Can make 4
-            else if (ownCount == 2 && ownOpenEnds >= 2) score += 1000; // Open 3
-            else if (ownCount == 2 && ownOpenEnds >= 1) score += 100;
-            else if (ownCount == 1 && ownOpenEnds >= 2) score += 50;
-            
-            // Opponent patterns (defense - prioritize blocking!)
-            if (oppCount >= 4) score += 900000; // Must block! (slightly less than win)
-            else if (oppCount == 3 && oppOpenEnds >= 2) score += 800000; // Must block open 3!
-            else if (oppCount == 3 && oppOpenEnds >= 1) score += 50000; // Block 4 threat
-            else if (oppCount == 2 && oppOpenEnds >= 2) score += 5000; // Block open 3
-            else if (oppCount == 2 && oppOpenEnds >= 1) score += 500;
-        }
-        
-        // Center preference
         int center = Board.Size / 2;
-        score += Math.Max(0, 15 - Math.Abs(row - center) - Math.Abs(col - center));
+        if (Board.IsEmpty(center, center))
+            return new GomokuMove(center, center);
         
-        return score;
+        for (int r = 0; r < Board.Size; r++)
+            for (int c = 0; c < Board.Size; c++)
+                if (Board.IsEmpty(r, c) && HasNeighbor(r, c))
+                    return new GomokuMove(r, c);
+        
+        return null;
     }
     
     private bool HasNeighbor(int row, int col)
     {
         for (int dr = -2; dr <= 2; dr++)
-        {
             for (int dc = -2; dc <= 2; dc++)
             {
                 if (dr == 0 && dc == 0) continue;
                 int r = row + dr, c = col + dc;
-                if (r >= 0 && r < Board.Size && c >= 0 && c < Board.Size)
-                    if (!Board.IsEmpty(r, c)) return true;
+                if (r >= 0 && r < Board.Size && c >= 0 && c < Board.Size && !Board.IsEmpty(r, c))
+                    return true;
             }
-        }
         return false;
     }
     
     private GomokuAIState CreateAIState()
     {
-        // Clone board to int array
         var boardArray = new int[Board.Size, Board.Size];
         for (int r = 0; r < Board.Size; r++)
             for (int c = 0; c < Board.Size; c++)
@@ -208,13 +121,9 @@ public class GomokuLogic
         return new GomokuAIState(boardArray, Board.Size, CurrentPlayer);
     }
     
-    /// <summary>
-    /// Set AI difficulty level.
-    /// </summary>
     public void SetAIDifficulty(string difficulty)
     {
         if (_ai == null) return;
-        
         _ai.Difficulty = difficulty;
     }
 }
