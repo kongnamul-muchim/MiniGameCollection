@@ -25,6 +25,10 @@ public class ChessGame : IGame
     public Models.ChessBoard Board => _logic.Board;
     public Models.PieceColor CurrentColor => _logic.CurrentColor;
     public bool IsWhiteTurn => _logic.CurrentColor == Models.PieceColor.White;
+    public bool IsGameOver => _logic.IsGameOver;
+    public int? Winner => _logic.Winner;
+    public bool HasAI => _logic.HasAI;
+    public bool AIIsWhite => _logic.AIIsWhite;
     
     public Models.ChessPiece? GetPiece(int row, int col) => _logic.Board.GetPiece(row, col);
     public bool MakeMove(int fromRow, int fromCol, int toRow, int toCol)
@@ -63,6 +67,27 @@ public class ChessGame : IGame
     public bool MovePiece(int fromRow, int fromCol, int toRow, int toCol)
     {
         return MakeMove(fromRow, fromCol, toRow, toCol);
+    }
+    
+    /// <summary>
+    /// Check if it's currently AI's turn.
+    /// </summary>
+    public bool IsAITurn() => _logic.IsAITurn();
+    
+    /// <summary>
+    /// Get AI's move and apply it.
+    /// </summary>
+    public (bool success, int fromRow, int fromCol, int toRow, int toCol)? MakeAIMoveWithPosition()
+    {
+        if (!_logic.HasAI || _logic.IsGameOver || !IsPlaying)
+            return null;
+        
+        var move = _logic.GetAIMove();
+        if (move == null)
+            return null;
+        
+        var result = MakeMove(move.From.Row, move.From.Column, move.To.Row, move.To.Column);
+        return (result, move.From.Row, move.From.Column, move.To.Row, move.To.Column);
     }
     
     public void EndGame() => _stateManager.ChangeState(GameState.GameOver);

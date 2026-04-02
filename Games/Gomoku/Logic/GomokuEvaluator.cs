@@ -41,14 +41,15 @@ public class GomokuEvaluator : IGameStateEvaluator<GomokuMove>
         
         if (gs.IsGameOver)
         {
-            if (gs.Winner == 2) return WIN;   // AI (White) wins
-            if (gs.Winner == 1) return -WIN;  // Human (Black) wins
+            if (gs.Winner == gs.AIColor) return WIN;
+            if (gs.Winner.HasValue) return -WIN;
             return 0;
         }
         
-        // Always evaluate from AI's perspective (AI = Player 2 = White)
-        int aiScore = EvaluateForPlayer(gs.Board, gs.Size, 2);
-        int oppScore = EvaluateForPlayer(gs.Board, gs.Size, 1);
+        // Always evaluate from AI's perspective
+        int aiScore = EvaluateForPlayer(gs.Board, gs.Size, gs.AIColor);
+        int oppColor = gs.AIColor == 1 ? 2 : 1;
+        int oppScore = EvaluateForPlayer(gs.Board, gs.Size, oppColor);
         
         return aiScore - oppScore;
     }
@@ -292,7 +293,8 @@ public class GomokuEvaluator : IGameStateEvaluator<GomokuMove>
         var newState = new GomokuAIState(
             newBoard,
             gs.Size,
-            gs.CurrentPlayer == 1 ? 2 : 1
+            gs.CurrentPlayer == 1 ? 2 : 1,
+            gs.AIColor
         );
         
         // Check for win
@@ -314,14 +316,16 @@ public class GomokuAIState : IGameState
     public int[,] Board { get; }
     public int Size { get; }
     public int CurrentPlayer { get; }
+    public int AIColor { get; }
     public bool IsGameOver { get; private set; }
     public int? Winner { get; private set; }
     
-    public GomokuAIState(int[,] board, int size, int currentPlayer)
+    public GomokuAIState(int[,] board, int size, int currentPlayer, int aiColor)
     {
         Board = board;
         Size = size;
         CurrentPlayer = currentPlayer;
+        AIColor = aiColor;
         IsGameOver = false;
         Winner = null;
     }

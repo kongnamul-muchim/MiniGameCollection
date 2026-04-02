@@ -16,6 +16,7 @@ public class GomokuLogic
     public int? Winner => _state.Winner;
     public bool HasAI => _ai != null;
     public string? AIDifficulty => _ai?.Difficulty;
+    public bool AIIsBlack { get; private set; } = true; // AI starts as Black by default
     
     public GomokuLogic(IGomokuValidator validator, bool useAI = false, int aiDepth = 2)
     {
@@ -44,6 +45,14 @@ public class GomokuLogic
         _state.IsGameOver = false;
         _state.Winner = null;
         _state.MovesPlayed = 0;
+        
+        // Random first player for AI games
+        if (HasAI)
+        {
+            AIIsBlack = new Random().Next(2) == 0;
+            // AI is Black (Player 1) = AI goes first
+            // AI is White (Player 2) = Human goes first
+        }
     }
 
     public bool PlaceStone(int row, int col)
@@ -84,6 +93,17 @@ public class GomokuLogic
         }
     }
     
+    /// <summary>
+    /// Check if it's currently AI's turn.
+    /// </summary>
+    public bool IsAITurn()
+    {
+        if (!HasAI || _state.IsGameOver) return false;
+        // AI is Black (1) or White (2)
+        int aiPlayer = AIIsBlack ? 1 : 2;
+        return _state.CurrentPlayer == aiPlayer;
+    }
+    
     private GomokuMove? GetFallbackMove()
     {
         int center = Board.Size / 2;
@@ -118,7 +138,8 @@ public class GomokuLogic
             for (int c = 0; c < Board.Size; c++)
                 boardArray[r, c] = Board.GetCell(r, c);
         
-        return new GomokuAIState(boardArray, Board.Size, CurrentPlayer);
+        int aiColor = AIIsBlack ? 1 : 2;
+        return new GomokuAIState(boardArray, Board.Size, CurrentPlayer, aiColor);
     }
     
     public void SetAIDifficulty(string difficulty)

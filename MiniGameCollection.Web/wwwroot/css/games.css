@@ -616,7 +616,43 @@
 }
 
 .chess-cell.last-move {
-    background: #aaa23a;
+    background: #aaa23a !important;
+}
+
+.chess-cell.valid-move {
+    position: relative;
+}
+
+.chess-cell.valid-move::before {
+    content: '';
+    position: absolute;
+    width: 30%;
+    height: 30%;
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.valid-move-dot {
+    width: 30%;
+    height: 30%;
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 50%;
+}
+
+.game-message.draw {
+    background: #f0f0f0;
+    color: #666;
+    font-size: 1.5rem;
+    font-weight: 700;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    margin: 1rem auto;
+    max-width: 300px;
 }
 
 .chess-piece {

@@ -30,6 +30,7 @@ public class GomokuGame : IGame
     public int? Winner => _logic.Winner;
     public bool HasAI => _logic.HasAI;
     public string? AIDifficulty => _logic.AIDifficulty;
+    public bool AIIsBlack => _logic.AIIsBlack;
 
     public GomokuGame(GomokuLogic logic)
     {
@@ -91,6 +92,11 @@ public class GomokuGame : IGame
         
         return result;
     }
+    
+    /// <summary>
+    /// Check if it's currently AI's turn.
+    /// </summary>
+    public bool IsAITurn() => _logic.IsAITurn();
     
     /// <summary>
     /// Get AI's move and apply it.

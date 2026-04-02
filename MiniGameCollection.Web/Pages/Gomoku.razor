@@ -20,6 +20,7 @@
             @if (game.HasAI)
             {
                 <span>Mode: <strong>vs AI (@game.AIDifficulty)</strong></span>
+                <span>You: <strong>@(game.AIIsBlack ? "White ○" : "Black ●")</strong></span>
             }
             else
             {
@@ -107,6 +108,34 @@
         GameService.OnStateChanged += StateChanged;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && game != null && game.HasAI && game.IsAITurn() && game.IsPlaying)
+        {
+            // AI goes first - make AI move
+            aiThinking = true;
+            StateHasChanged();
+            
+            await Task.Delay(300);
+            
+            await InvokeAsync(() =>
+            {
+                if (game != null)
+                {
+                    var result = game.MakeAIMoveWithPosition();
+                    if (result.HasValue && result.Value.success)
+                    {
+                        lastMove = (result.Value.row, result.Value.col);
+                    }
+                }
+                aiThinking = false;
+                StateHasChanged();
+            });
+        }
+        
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
     private void CreateGame()
     {
         if (useAI)
@@ -131,24 +160,24 @@
         if (game == null || !game.IsPlaying || _paused)
             return;
 
-        // Player's turn (Black)
-        if (!game.IsBlackTurn && game.HasAI)
-            return; // Wait for AI
+        // If it's AI's turn, ignore player clicks
+        if (game.HasAI && game.IsAITurn())
+            return;
 
         if (game.PlaceStone(row, col))
         {
             lastMove = (row, col);
             StateHasChanged();
 
-            // AI's turn (White)
-            if (game.HasAI && !game.IsGameOver && !game.IsBlackTurn)
+            // AI's turn
+            if (game.HasAI && !game.IsGameOver && game.IsAITurn())
             {
                 aiThinking = true;
                 StateHasChanged();
                 
                 _ = Task.Run(async () =>
                 {
-                    await Task.Delay(100); // Small delay for UX
+                    await Task.Delay(100);
                     await InvokeAsync(() =>
                     {
                         if (game != null)
@@ -173,6 +202,9 @@
         _paused = false;
         lastMove = (-1, -1);
         StateHasChanged();
+        
+        // Trigger AI first move if needed
+        _ = TriggerAIFirstMove();
     }
 
     private void Pause()
@@ -190,6 +222,9 @@
         CreateGame();
         _paused = false;
         StateHasChanged();
+        
+        // Trigger AI first move if needed
+        _ = TriggerAIFirstMove();
     }
 
     private void SetMode(bool ai)
@@ -198,6 +233,9 @@
         CreateGame();
         _paused = false;
         StateHasChanged();
+        
+        // Trigger AI first move if needed
+        _ = TriggerAIFirstMove();
     }
 
     private void SetDifficulty(int depth)
@@ -206,6 +244,37 @@
         CreateGame();
         _paused = false;
         StateHasChanged();
+        
+        // Trigger AI first move if needed
+        _ = TriggerAIFirstMove();
+    }
+
+    private async Task TriggerAIFirstMove()
+    {
+        if (game == null || !game.HasAI || !game.IsPlaying)
+            return;
+        
+        await Task.Delay(300);
+        
+        if (game.IsAITurn() && !game.IsGameOver)
+        {
+            aiThinking = true;
+            StateHasChanged();
+            
+            await InvokeAsync(() =>
+            {
+                if (game != null)
+                {
+                    var result = game.MakeAIMoveWithPosition();
+                    if (result.HasValue && result.Value.success)
+                    {
+                        lastMove = (result.Value.row, result.Value.col);
+                    }
+                }
+                aiThinking = false;
+                StateHasChanged();
+            });
+        }
     }
 
     public void Dispose()

@@ -38,7 +38,7 @@ public class ChessBoard
             Cells[1, c] = new ChessPiece(PieceType.Pawn, PieceColor.Black);
     }
     
-    public ChessPiece? GetPiece(int row, int col) => Cells[row, col];
+    public virtual ChessPiece? GetPiece(int row, int col) => Cells[row, col];
     
     public void MovePiece(int fromRow, int fromCol, int toRow, int toCol)
     {

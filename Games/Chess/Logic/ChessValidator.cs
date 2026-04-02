@@ -118,4 +118,55 @@ public class ChessValidator
         
         return false;
     }
+    
+    public bool IsCheckmate(ChessBoard board, PieceColor color)
+    {
+        if (!IsInCheck(board, color)) return false;
+        return !HasAnyLegalMove(board, color);
+    }
+    
+    public bool IsStalemate(ChessBoard board, PieceColor color)
+    {
+        if (IsInCheck(board, color)) return false;
+        return !HasAnyLegalMove(board, color);
+    }
+    
+    private bool HasAnyLegalMove(ChessBoard board, PieceColor color)
+    {
+        for (int r = 0; r < 8; r++)
+        {
+            for (int c = 0; c < 8; c++)
+            {
+                if (board.GetPiece(r, c) is { Color: var pc } && pc == color)
+                {
+                    for (int tr = 0; tr < 8; tr++)
+                    {
+                        for (int tc = 0; tc < 8; tc++)
+                        {
+                            var move = new ChessMove(new Position(r, c), new Position(tr, tc));
+                            if (IsValidMove(board, move, color) && !WouldBeInCheck(board, move, color))
+                                return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    private bool WouldBeInCheck(ChessBoard board, ChessMove move, PieceColor color)
+    {
+        var piece = board.GetPiece(move.From.Row, move.From.Column);
+        var captured = board.GetPiece(move.To.Row, move.To.Column);
+        
+        board.Cells[move.To.Row, move.To.Column] = piece;
+        board.Cells[move.From.Row, move.From.Column] = null;
+        
+        bool inCheck = IsInCheck(board, color);
+        
+        board.Cells[move.From.Row, move.From.Column] = piece;
+        board.Cells[move.To.Row, move.To.Column] = captured;
+        
+        return inCheck;
+    }
 }
