@@ -6,7 +6,7 @@ public class GomokuValidator : IGomokuValidator
 {
     private static readonly (int, int)[] Directions = { (0, 1), (1, 0), (1, 1), (1, -1) };
     
-    public bool IsValidMove(GomokuBoard board, int row, int col)
+    public bool IsValidMove(IGomokuBoard board, int row, int col)
     {
         if (row < 0 || row >= board.Size || col < 0 || col >= board.Size)
             return false;
@@ -14,7 +14,7 @@ public class GomokuValidator : IGomokuValidator
         return board.IsEmpty(row, col);
     }
     
-    public bool CheckWin(GomokuBoard board, int row, int col, int player)
+    public bool CheckWin(IGomokuBoard board, int row, int col, int player)
     {
         foreach (var (dr, dc) in Directions)
         {
@@ -33,7 +33,7 @@ public class GomokuValidator : IGomokuValidator
         return false;
     }
     
-    private int CountInDirection(GomokuBoard board, int row, int col, int dr, int dc, int player)
+    private int CountInDirection(IGomokuBoard board, int row, int col, int dr, int dc, int player)
     {
         int count = 0;
         int r = row + dr;

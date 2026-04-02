@@ -505,19 +505,28 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
 
 /// <summary>
 /// Temporary board adapter for validation.
+/// Uses composition instead of inheritance (LSP fix).
 /// </summary>
-public class TempBoardAdapter : ChessBoard
+public class TempBoardAdapter : IChessBoard
 {
     private readonly ChessPiece?[,] _cells;
+    
+    public int Size => 8;
     
     public TempBoardAdapter(ChessPiece?[,] cells)
     {
         _cells = cells;
     }
     
-    public override ChessPiece? GetPiece(int row, int col)
+    public ChessPiece? GetPiece(int row, int col)
     {
         if (row < 0 || row >= 8 || col < 0 || col >= 8) return null;
         return _cells[row, col];
+    }
+    
+    public void SetPiece(int row, int col, ChessPiece? piece)
+    {
+        if (row >= 0 && row < 8 && col >= 0 && col < 8)
+            _cells[row, col] = piece;
     }
 }

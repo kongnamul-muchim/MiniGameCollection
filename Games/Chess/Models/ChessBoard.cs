@@ -1,6 +1,6 @@
 namespace Games.Chess.Models;
 
-public class ChessBoard
+public class ChessBoard : IChessBoard
 {
     public ChessPiece?[,] Cells { get; }
     public int Size => 8;
@@ -39,6 +39,12 @@ public class ChessBoard
     }
     
     public virtual ChessPiece? GetPiece(int row, int col) => Cells[row, col];
+    
+    public virtual void SetPiece(int row, int col, ChessPiece? piece)
+    {
+        if (row >= 0 && row < 8 && col >= 0 && col < 8)
+            Cells[row, col] = piece;
+    }
     
     public void MovePiece(int fromRow, int fromCol, int toRow, int toCol)
     {

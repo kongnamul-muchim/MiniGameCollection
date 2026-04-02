@@ -339,37 +339,40 @@ public class GomokuAIState : IGameState
 
 /// <summary>
 /// Adapter to use int[,] board with IGomokuValidator.
+/// Uses composition instead of inheritance (LSP fix).
 /// </summary>
-public class GomokuBoardAdapter : GomokuBoard
+public class GomokuBoardAdapter : IGomokuBoard
 {
     private readonly int[,] _board;
     private readonly int _size;
     
-    public GomokuBoardAdapter(int[,] board, int size) : base(size)
+    public int Size => _size;
+    
+    public GomokuBoardAdapter(int[,] board, int size)
     {
         _board = board;
         _size = size;
     }
     
-    public override int GetCell(int row, int col)
+    public int GetCell(int row, int col)
     {
         if (row < 0 || row >= _size || col < 0 || col >= _size)
             return 0;
         return _board[row, col];
     }
     
-    public override void SetCell(int row, int col, int value)
+    public void SetCell(int row, int col, int value)
     {
         if (row >= 0 && row < _size && col >= 0 && col < _size)
             _board[row, col] = value;
     }
     
-    public override bool IsEmpty(int row, int col)
+    public bool IsEmpty(int row, int col)
     {
         return GetCell(row, col) == 0;
     }
     
-    public override void Clear()
+    public void Clear()
     {
         for (int r = 0; r < _size; r++)
             for (int c = 0; c < _size; c++)

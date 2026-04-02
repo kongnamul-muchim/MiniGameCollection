@@ -1,6 +1,6 @@
 namespace Games.Gomoku.Models;
 
-public class GomokuBoard
+public class GomokuBoard : IGomokuBoard
 {
     public int[,] Cells { get; }
     public int Size => 15;

@@ -4,7 +4,7 @@ namespace Games.Chess.Logic;
 
 public class ChessValidator
 {
-    public bool IsValidMove(ChessBoard board, ChessMove move, PieceColor color, ChessState? state = null)
+    public bool IsValidMove(IChessBoard board, ChessMove move, PieceColor color, ChessState? state = null)
     {
         var piece = board.GetPiece(move.From.Row, move.From.Column);
         if (piece == null || piece.Color != color) return false;
@@ -36,7 +36,7 @@ public class ChessValidator
         };
     }
     
-    private bool IsValidCastling(ChessBoard board, ChessMove move, PieceColor color, ChessState? state)
+    private bool IsValidCastling(IChessBoard board, ChessMove move, PieceColor color, ChessState? state)
     {
         if (state == null) return false;
         
@@ -81,7 +81,7 @@ public class ChessValidator
         return true;
     }
     
-    private bool IsValidEnPassant(ChessBoard board, ChessMove move, PieceColor color, ChessState? state)
+    private bool IsValidEnPassant(IChessBoard board, ChessMove move, PieceColor color, ChessState? state)
     {
         if (state == null) return false;
         if (state.EnPassantTarget == null) return false;
@@ -90,7 +90,7 @@ public class ChessValidator
         return move.To.Row == target.Row && move.To.Column == target.Column;
     }
     
-    private bool IsValidPawnMove(ChessBoard board, ChessMove move, PieceColor color)
+    private bool IsValidPawnMove(IChessBoard board, ChessMove move, PieceColor color)
     {
         int direction = color == PieceColor.White ? -1 : 1;
         int fromRow = move.From.Row, toRow = move.To.Row;
@@ -123,7 +123,7 @@ public class ChessValidator
         return (dr == 2 && dc == 1) || (dr == 1 && dc == 2);
     }
     
-    private bool IsValidBishopMove(ChessBoard board, ChessMove move)
+    private bool IsValidBishopMove(IChessBoard board, ChessMove move)
     {
         int dr = move.To.Row - move.From.Row;
         int dc = move.To.Column - move.From.Column;
@@ -131,7 +131,7 @@ public class ChessValidator
         return IsPathClear(board, move.From, move.To, dr > 0 ? 1 : -1, dc > 0 ? 1 : -1);
     }
     
-    private bool IsValidRookMove(ChessBoard board, ChessMove move)
+    private bool IsValidRookMove(IChessBoard board, ChessMove move)
     {
         int dr = move.To.Row - move.From.Row;
         int dc = move.To.Column - move.From.Column;
@@ -139,7 +139,7 @@ public class ChessValidator
         return IsPathClear(board, move.From, move.To, dr == 0 ? 0 : (dr > 0 ? 1 : -1), dc == 0 ? 0 : (dc > 0 ? 1 : -1));
     }
     
-    private bool IsValidQueenMove(ChessBoard board, ChessMove move)
+    private bool IsValidQueenMove(IChessBoard board, ChessMove move)
     {
         return IsValidBishopMove(board, move) || IsValidRookMove(board, move);
     }
@@ -151,7 +151,7 @@ public class ChessValidator
         return dr <= 1 && dc <= 1;
     }
     
-    private bool IsPathClear(ChessBoard board, Position from, Position to, int dr, int dc)
+    private bool IsPathClear(IChessBoard board, Position from, Position to, int dr, int dc)
     {
         int r = from.Row + dr, c = from.Column + dc;
         while (r != to.Row || c != to.Column)
@@ -163,7 +163,7 @@ public class ChessValidator
         return true;
     }
     
-    public bool IsInCheck(ChessBoard board, PieceColor color)
+    public bool IsInCheck(IChessBoard board, PieceColor color)
     {
         Position? kingPos = null;
         for (int r = 0; r < 8; r++)
@@ -176,7 +176,7 @@ public class ChessValidator
         return IsSquareAttacked(board, kingPos.Value.Row, kingPos.Value.Column, color);
     }
     
-    public bool IsSquareAttacked(ChessBoard board, int row, int col, PieceColor defendingColor)
+    public bool IsSquareAttacked(IChessBoard board, int row, int col, PieceColor defendingColor)
     {
         var attackingColor = defendingColor == PieceColor.White ? PieceColor.Black : PieceColor.White;
         
@@ -207,7 +207,7 @@ public class ChessValidator
         return false;
     }
     
-    private bool IsValidPawnCapture(ChessBoard board, ChessMove move, PieceColor color)
+    private bool IsValidPawnCapture(IChessBoard board, ChessMove move, PieceColor color)
     {
         int direction = color == PieceColor.White ? -1 : 1;
         int fromRow = move.From.Row, toRow = move.To.Row;
@@ -216,19 +216,19 @@ public class ChessValidator
         return toRow == fromRow + direction && Math.Abs(toCol - fromCol) == 1;
     }
     
-    public bool IsCheckmate(ChessBoard board, PieceColor color, ChessState state)
+    public bool IsCheckmate(IChessBoard board, PieceColor color, ChessState state)
     {
         if (!IsInCheck(board, color)) return false;
         return !HasAnyLegalMove(board, color, state);
     }
     
-    public bool IsStalemate(ChessBoard board, PieceColor color, ChessState state)
+    public bool IsStalemate(IChessBoard board, PieceColor color, ChessState state)
     {
         if (IsInCheck(board, color)) return false;
         return !HasAnyLegalMove(board, color, state);
     }
     
-    private bool HasAnyLegalMove(ChessBoard board, PieceColor color, ChessState state)
+    private bool HasAnyLegalMove(IChessBoard board, PieceColor color, ChessState state)
     {
         for (int r = 0; r < 8; r++)
         {
@@ -274,32 +274,27 @@ public class ChessValidator
         return false;
     }
     
-    private bool WouldBeInCheck(ChessBoard board, ChessMove move, PieceColor color, ChessState state)
+    private bool WouldBeInCheck(IChessBoard board, ChessMove move, PieceColor color, ChessState state)
     {
-        var piece = board.GetPiece(move.From.Row, move.From.Column);
-        var captured = board.GetPiece(move.To.Row, move.To.Column);
+        // Clone board for simulation
+        var tempCells = new ChessPiece?[8, 8];
+        for (int r = 0; r < 8; r++)
+            for (int c = 0; c < 8; c++)
+                tempCells[r, c] = board.GetPiece(r, c);
+        
+        var piece = tempCells[move.From.Row, move.From.Column];
+        var captured = tempCells[move.To.Row, move.To.Column];
         
         // Handle en passant capture
-        ChessPiece? epCaptured = null;
-        Position? epPos = null;
         if (move.IsEnPassant)
         {
-            epPos = new Position(move.From.Row, move.To.Column);
-            epCaptured = board.GetPiece(epPos.Value.Row, epPos.Value.Column);
-            board.Cells[epPos.Value.Row, epPos.Value.Column] = null;
+            tempCells[move.From.Row, move.To.Column] = null;
         }
         
-        board.Cells[move.To.Row, move.To.Column] = piece;
-        board.Cells[move.From.Row, move.From.Column] = null;
+        tempCells[move.To.Row, move.To.Column] = piece;
+        tempCells[move.From.Row, move.From.Column] = null;
         
-        bool inCheck = IsInCheck(board, color);
-        
-        board.Cells[move.From.Row, move.From.Column] = piece;
-        board.Cells[move.To.Row, move.To.Column] = captured;
-        
-        if (epPos.HasValue)
-            board.Cells[epPos.Value.Row, epPos.Value.Column] = epCaptured;
-        
-        return inCheck;
+        var adapter = new TempBoardAdapter(tempCells);
+        return IsInCheck(adapter, color);
     }
 }
