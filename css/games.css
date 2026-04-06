@@ -1,0 +1,1093 @@
+/* ========================================
+   Mini Game Collection - Game Styles
+   ======================================== */
+
+/* Game Container */
+.game-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    min-height: calc(100vh - 150px);
+}
+
+.game-info {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    align-items: center;
+    flex-wrap: wrap;
+    width: fit-content;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.game-info > span {
+    min-width: 80px;
+    text-align: center;
+}
+
+.game-info .hint {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #888;
+}
+
+.game-controls {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.game-controls .btn {
+    padding: 0.875rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.game-message {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #f0f0f0;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* ========================================
+   Pattern Memory Styles
+   ======================================== */
+.pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 480px;
+    margin: 2.5rem auto;
+    aspect-ratio: 1 / 1;
+}
+
+.pattern-tile {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border: 4px solid #667eea;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pattern-tile:hover:not(:disabled) {
+    background: #f0f4ff;
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.pattern-tile.highlighted {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #764ba2;
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+}
+
+.pattern-tile:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ========================================
+   Sudoku Styles - Compact (0.5x)
+   ======================================== */
+.sudoku-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 1.5rem auto;
+    max-width: 550px;
+    border: 4px solid #333;
+    background: white;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.sudoku-row {
+    display: flex;
+}
+
+.sudoku-cell {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-size: 2rem;
+    font-weight: 700;
+    transition: background 0.2s;
+    position: relative;
+}
+
+.sudoku-cell:hover:not(.fixed) {
+    background: #f0f4ff;
+}
+
+.sudoku-cell.fixed {
+    background: #f9f9f9;
+    color: #333;
+    cursor: default;
+}
+
+.sudoku-cell:not(.fixed) {
+    background: #fff;
+    color: #667eea;
+}
+
+.sudoku-cell.selected {
+    background: #ffe066 !important;
+}
+
+.sudoku-cell.border-bottom {
+    border-bottom: 3px solid #333;
+}
+
+.sudoku-cell.border-right {
+    border-right: 3px solid #333;
+}
+
+/* Notes grid inside cell */
+.notes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+.note-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #999;
+    visibility: hidden;
+}
+
+.note-num.visible {
+    visibility: visible;
+    color: #667eea;
+}
+
+.number-pad {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 450px;
+    margin: 1rem auto;
+}
+
+.number-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.number-btn:hover {
+    background: #f0f4ff;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.number-btn-clear {
+    background: #fff3cd;
+    border-color: #ffc107;
+    width: 60px;
+}
+
+.number-btn-clear:hover {
+    background: #ffe066;
+}
+
+/* Mode Toggle */
+.mode-toggle {
+    display: flex;
+    justify-content: center;
+    margin: 1rem auto;
+}
+
+.mode-btn {
+    padding: 0.5rem 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mode-btn:hover {
+    border-color: #667eea;
+}
+
+.mode-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #764ba2;
+}
+
+.mode-indicator {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.mode-indicator.note-mode {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+/* Difficulty Selector */
+.difficulty-selector {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem auto;
+    flex-wrap: wrap;
+}
+
+.difficulty-selector span {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-right: 0.5rem;
+}
+
+.diff-btn {
+    padding: 0.5rem 1.25rem;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.diff-btn:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.diff-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #764ba2;
+}
+
+.diff-btn[data-value="1"].active { background: linear-gradient(135deg, #4CAF50, #66BB6A); border-color: #4CAF50; }
+.diff-btn[data-value="2"].active { background: linear-gradient(135deg, #FF9800, #FFB74D); border-color: #FF9800; }
+.diff-btn[data-value="3"].active { background: linear-gradient(135deg, #F44336, #EF5350); border-color: #F44336; }
+.diff-btn[data-value="4"].active { background: linear-gradient(135deg, #9C27B0, #BA68C8); border-color: #9C27B0; }
+
+/* ========================================
+   Minesweeper Styles
+   ======================================== */
+.minesweeper-scroll-wrapper {
+    max-height: 70vh;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    margin: 1rem auto;
+    border: 4px solid #888;
+    background: #ccc;
+    padding: 4px;
+}
+
+.minesweeper-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.minesweeper-row {
+    display: flex;
+}
+
+.minesweeper-cell {
+    width: 40px;
+    height: 40px;
+    border: 3px outset #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: #ccc;
+    transition: all 0.1s;
+}
+
+.minesweeper-cell:hover:not(.revealed) {
+    background: #ddd;
+}
+
+.minesweeper-cell.revealed {
+    border: 1px solid #888;
+    background: #ddd;
+    cursor: default;
+}
+
+.minesweeper-cell.flagged {
+    background: #ccc;
+}
+
+.minesweeper-cell.clicked {
+    animation: cellClick 0.15s ease-out;
+}
+
+.minesweeper-cell.mine-revealed {
+    background: #ff4444 !important;
+    border-color: #cc0000;
+}
+
+@keyframes cellClick {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.9); background: #bbb; }
+    100% { transform: scale(1); }
+}
+
+.game-message.game-over {
+    background: #ffe0e0;
+    color: #cc0000;
+    font-size: 1.5rem;
+    animation: shake 0.5s ease-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.count-1 { color: #0000ff; }
+.count-2 { color: #008000; }
+.count-3 { color: #ff0000; }
+.count-4 { color: #000080; }
+.count-5 { color: #800000; }
+.count-6 { color: #008080; }
+.count-7 { color: #000000; }
+.count-8 { color: #808080; }
+
+/* ========================================
+   Gomoku Styles
+   ======================================== */
+.gomoku-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1.5rem auto;
+    background: linear-gradient(135deg, #dcb35c 0%, #c9a24d 100%);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    width: fit-content;
+    min-width: fit-content;
+}
+
+.gomoku-row {
+    display: flex;
+}
+
+.gomoku-cell {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* Grid lines - centered on cell borders */
+.gomoku-cell::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.5);
+    top: 50%;
+    left: 0;
+}
+
+.gomoku-cell::after {
+    content: '';
+    position: absolute;
+    height: 100%;
+    width: 1px;
+    background: rgba(0, 0, 0, 0.5);
+    left: 50%;
+    top: 0;
+}
+
+/* Edge cells - hide outer grid lines */
+.gomoku-row:first-child .gomoku-cell::after {
+    top: 50%;
+    height: 50%;
+}
+
+.gomoku-row:last-child .gomoku-cell::after {
+    height: 50%;
+}
+
+.gomoku-cell:first-child::before {
+    left: 50%;
+    width: 50%;
+}
+
+.gomoku-cell:last-child::before {
+    width: 50%;
+}
+
+.stone {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    z-index: 1;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+    transition: transform 0.1s ease;
+}
+
+.stone:hover {
+    transform: scale(1.05);
+}
+
+.stone-black {
+    background: radial-gradient(circle at 30% 30%, #666, #000);
+}
+
+.stone-white {
+    background: radial-gradient(circle at 30% 30%, #fff, #ccc);
+    border: 1px solid #999;
+}
+
+.gomoku-cell.last-move {
+    background: rgba(0, 255, 0, 0.3);
+}
+
+.gomoku-cell.last-move .stone {
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.8);
+}
+
+/* Winner message for Gomoku */
+.game-message.winner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    margin: 1rem auto;
+    max-width: 300px;
+    animation: winnerPulse 1s ease-in-out infinite;
+}
+
+@keyframes winnerPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+/* AI Status */
+.ai-status {
+    color: #f0a000;
+    font-weight: 600;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Mode selector */
+.mode-selector {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem auto;
+    flex-wrap: wrap;
+}
+
+.mode-selector span {
+    font-weight: 600;
+    color: #555;
+}
+
+.mode-btn {
+    padding: 0.5rem 1.25rem;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.mode-btn:hover {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.mode-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #764ba2;
+}
+
+/* ========================================
+   Chess Styles
+   ======================================== */
+.chess-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1.5rem auto;
+    border: 4px solid #8b4513;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.chess-row {
+    display: flex;
+}
+
+.chess-cell {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 2.5rem;
+    transition: background 0.2s;
+}
+
+.chess-cell:hover {
+    box-shadow: inset 0 0 0 3px rgba(102, 126, 234, 0.5);
+}
+
+.chess-cell.light {
+    background: #f0d9b5;
+}
+
+.chess-cell.dark {
+    background: #b58863;
+}
+
+.chess-cell.selected {
+    background: #7fc97f !important;
+}
+
+.chess-cell.last-move {
+    background: #aaa23a !important;
+}
+
+.chess-cell.valid-move {
+    position: relative;
+}
+
+.chess-cell.valid-move::before {
+    content: '';
+    position: absolute;
+    width: 30%;
+    height: 30%;
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.valid-move-dot {
+    width: 30%;
+    height: 30%;
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 50%;
+}
+
+.game-message.draw {
+    background: #f0f0f0;
+    color: #666;
+    font-size: 1.5rem;
+    font-weight: 700;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    margin: 1rem auto;
+    max-width: 300px;
+}
+
+.chess-piece {
+    user-select: none;
+    filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.3));
+}
+
+/* ========================================
+   Tetris Styles
+   ======================================== */
+.tetris-layout {
+    display: grid;
+    grid-template-columns: 300px 180px;
+    gap: 2rem;
+    justify-content: center;
+    align-items: start;
+    margin: 1.5rem auto;
+    width: fit-content;
+}
+
+.tetris-board {
+    display: grid;
+    grid-template-rows: repeat(20, 1fr);
+    grid-template-columns: repeat(10, 1fr);
+    border: 4px solid #333;
+    background: #0a0a0a;
+    width: 300px;
+    height: 600px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 0 60px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+}
+
+.tetris-row {
+    display: contents;
+}
+
+.tetris-cell {
+    border: 1px solid rgba(40, 40, 40, 0.2);
+    box-sizing: border-box;
+}
+
+/* Empty cells - grid pattern */
+.tetris-cell.empty {
+    border: 1px solid rgba(40, 40, 40, 0.25);
+}
+
+/* Current piece colors - no border by default */
+.piece-1 { background: #00f0f0; }
+.piece-2 { background: #f0f000; }
+.piece-3 { background: #a000f0; }
+.piece-4 { background: #00f000; }
+.piece-5 { background: #f00000; }
+.piece-6 { background: #0000f0; }
+.piece-7 { background: #f0a000; }
+
+/* Edge borders for current piece */
+.piece-1.edge-left { border-left: 2px solid #00a0a0; }
+.piece-1.edge-right { border-right: 2px solid #00a0a0; }
+.piece-1.edge-top { border-top: 2px solid #00a0a0; }
+.piece-1.edge-bottom { border-bottom: 2px solid #00a0a0; }
+
+.piece-2.edge-left { border-left: 2px solid #a0a000; }
+.piece-2.edge-right { border-right: 2px solid #a0a000; }
+.piece-2.edge-top { border-top: 2px solid #a0a000; }
+.piece-2.edge-bottom { border-bottom: 2px solid #a0a000; }
+
+.piece-3.edge-left { border-left: 2px solid #6000a0; }
+.piece-3.edge-right { border-right: 2px solid #6000a0; }
+.piece-3.edge-top { border-top: 2px solid #6000a0; }
+.piece-3.edge-bottom { border-bottom: 2px solid #6000a0; }
+
+.piece-4.edge-left { border-left: 2px solid #00a000; }
+.piece-4.edge-right { border-right: 2px solid #00a000; }
+.piece-4.edge-top { border-top: 2px solid #00a000; }
+.piece-4.edge-bottom { border-bottom: 2px solid #00a000; }
+
+.piece-5.edge-left { border-left: 2px solid #a00000; }
+.piece-5.edge-right { border-right: 2px solid #a00000; }
+.piece-5.edge-top { border-top: 2px solid #a00000; }
+.piece-5.edge-bottom { border-bottom: 2px solid #a00000; }
+
+.piece-6.edge-left { border-left: 2px solid #0000a0; }
+.piece-6.edge-right { border-right: 2px solid #0000a0; }
+.piece-6.edge-top { border-top: 2px solid #0000a0; }
+.piece-6.edge-bottom { border-bottom: 2px solid #0000a0; }
+
+.piece-7.edge-left { border-left: 2px solid #a06000; }
+.piece-7.edge-right { border-right: 2px solid #a06000; }
+.piece-7.edge-top { border-top: 2px solid #a06000; }
+.piece-7.edge-bottom { border-bottom: 2px solid #a06000; }
+
+/* Current piece glow effect */
+.current-piece {
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+}
+.ghost-piece {
+    background: rgba(100, 100, 100, 0.15) !important;
+}
+.ghost-piece.ghost-edge-left { border-left: 2px solid rgba(100, 100, 100, 0.3); }
+.ghost-piece.ghost-edge-right { border-right: 2px solid rgba(100, 100, 100, 0.3); }
+.ghost-piece.ghost-edge-top { border-top: 2px solid rgba(100, 100, 100, 0.3); }
+.ghost-piece.ghost-edge-bottom { border-bottom: 2px solid rgba(100, 100, 100, 0.3); }
+
+/* Locked pieces - subtle inner glow instead of border */
+.locked.piece-1 { box-shadow: inset 0 0 0 1px rgba(0, 160, 160, 0.4); }
+.locked.piece-2 { box-shadow: inset 0 0 0 1px rgba(160, 160, 0, 0.4); }
+.locked.piece-3 { box-shadow: inset 0 0 0 1px rgba(96, 0, 160, 0.4); }
+.locked.piece-4 { box-shadow: inset 0 0 0 1px rgba(0, 160, 0, 0.4); }
+.locked.piece-5 { box-shadow: inset 0 0 0 1px rgba(160, 0, 0, 0.4); }
+.locked.piece-6 { box-shadow: inset 0 0 0 1px rgba(0, 0, 160, 0.4); }
+.locked.piece-7 { box-shadow: inset 0 0 0 1px rgba(160, 96, 0, 0.4); }
+
+.mini-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.mini-row {
+    display: flex;
+    gap: 2px;
+}
+
+.mini-cell {
+    width: 20px;
+    height: 20px;
+    border: 1px solid #444;
+}
+
+.mini-cell.piece-1 { background: #00f0f0; border: 1px solid #00a0a0; }
+.mini-cell.piece-2 { background: #f0f000; border: 1px solid #a0a000; }
+.mini-cell.piece-3 { background: #a000f0; border: 1px solid #6000a0; }
+.mini-cell.piece-4 { background: #00f000; border: 1px solid #00a000; }
+.mini-cell.piece-5 { background: #f00000; border: 1px solid #a00000; }
+.mini-cell.piece-6 { background: #0000f0; border: 1px solid #0000a0; }
+.mini-cell.piece-7 { background: #f0a000; border: 1px solid #a06000; }
+
+.tetris-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 180px;
+    min-width: 180px;
+}
+
+.next-piece {
+    border: 3px solid #444;
+    padding: 1rem;
+    background: #0a0a0a;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    height: 170px;
+    box-sizing: border-box;
+}
+
+.next-piece h3 {
+    margin: 0 0 0.5rem 0;
+    color: #aaa;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.next-piece-display {
+    width: 120px;
+    height: 120px;
+    background: #151515;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    margin: 0 auto;
+}
+
+.tetris-stats {
+    background: #0a0a0a;
+    border: 3px solid #444;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    height: 100px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    align-items: center;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.stat-label {
+    color: #888;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.stat-value {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    min-width: 60px;
+    text-align: right;
+}
+
+.mobile-controls {
+    display: none;
+}
+
+/* ========================================
+   Responsive - HD
+   ======================================== */
+@media (max-width: 1280px) {
+    .game-container {
+        padding: 1.5rem;
+    }
+    
+    .pattern-grid {
+        max-width: 360px;
+        gap: 1rem;
+        margin: 2rem auto;
+    }
+    
+    .sudoku-cell {
+        width: 50px;
+        height: 50px;
+        font-size: 1.6rem;
+    }
+    
+    .note-num {
+        font-size: 0.65rem;
+    }
+    
+    .chess-cell {
+        width: 50px;
+        height: 50px;
+        font-size: 2rem;
+    }
+    
+    .gomoku-cell {
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+    }
+    
+    .stone {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .gomoku-board {
+        padding: 15px;
+    }
+    
+    .minesweeper-cell {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .tetris-board {
+        width: 250px;
+        height: 500px;
+    }
+    
+    .tetris-layout {
+        grid-template-columns: 250px 150px;
+        gap: 1.5rem;
+    }
+    
+    .tetris-sidebar {
+        width: 150px;
+        min-width: 150px;
+    }
+    
+    .tetris-sidebar .next-piece {
+        height: 150px;
+    }
+    
+    .tetris-sidebar .next-piece-display {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .tetris-sidebar .game-info {
+        height: 100px;
+    }
+    
+    .tetris-stats {
+        height: 85px;
+        padding: 0.4rem 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+    }
+    
+    .stat-value {
+        font-size: 0.95rem;
+        min-width: 50px;
+    }
+    
+    .mini-cell {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .game-info {
+        font-size: 1.1rem;
+    }
+}
+
+/* ========================================
+   Responsive - Mobile
+   ======================================== */
+@media (max-width: 768px) {
+    .pattern-grid {
+        max-width: 300px;
+        gap: 0.75rem;
+    }
+    
+    .sudoku-cell {
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+    }
+    
+    .note-num {
+        font-size: 0.5rem;
+    }
+    
+    .chess-cell {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
+    
+    .gomoku-cell {
+        width: 25px;
+        height: 25px;
+        flex-shrink: 0;
+    }
+    
+    .stone {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .gomoku-board {
+        padding: 10px;
+    }
+    
+    .minesweeper-cell {
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
+    }
+    
+    .tetris-board {
+        width: 200px;
+        height: 400px;
+    }
+    
+    .tetris-layout {
+        grid-template-columns: 200px 130px;
+        gap: 1rem;
+        justify-items: center;
+    }
+    
+    .tetris-sidebar {
+        width: 130px;
+        min-width: 130px;
+        flex-direction: column;
+    }
+    
+    .tetris-sidebar .next-piece {
+        height: 130px;
+        padding: 0.75rem;
+    }
+    
+    .tetris-sidebar .next-piece-display {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .tetris-sidebar .game-info {
+        height: 90px;
+        padding: 0.75rem;
+    }
+    
+    .tetris-stats {
+        height: 80px;
+        padding: 0.3rem 0.5rem;
+    }
+    
+    .stat-row {
+        gap: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.65rem;
+    }
+    
+    .stat-value {
+        font-size: 0.8rem;
+        min-width: 40px;
+    }
+    
+    .mini-cell {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .mobile-controls {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .mobile-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .mobile-btn:active {
+        transform: scale(0.95);
+    }
+}
