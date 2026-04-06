@@ -1,17 +1,42 @@
-# Mini Game Collection
+# 🎮 Mini Game Collection
 
-Blazor WebAssembly 기반 미니게임 컬렉션. 6개의 독립적인 미니게임을 포함하며, SOLID 원칙과 DI를 준수한 순수 C# Core 게임 로직으로 구성됨.
+> **Blazor WebAssembly 기반 미니게임 컬렉션**  
+> SOLID 원칙과 DI 를 준수한 순수 C# Core 게임 로직으로 구성된 포트폴리오 프로젝트입니다.
+
+### 🔗 Links
+
+| | |
+|---|---|
+| **🌐 Live Demo** | [배포 URL 입력 Pending](#) |
+| **📂 GitHub** | https://github.com/kongnamul-muchim/MiniGameCollection |
+| **📄 Portfolio** | [docs/PORTFOLIO.md](./docs/PORTFOLIO.md) |
+
+---
+
+## 🎯 Quick View
+
+| Feature | Description |
+|---------|-------------|
+| **Games** | 6 개의 미니게임 (패턴기억, 지뢰찾기, 스도쿠, 테트리스, 오목, 체스) |
+| **Tech** | Blazor WebAssembly, .NET 8.0, C# 12 |
+| **Architecture** | SOLID, DI, Event-Driven, State Machine |
+| **AI** | Heuristic (오목), Minimax + Alpha-Beta Pruning (체스) |
+| **Testing** | xUnit, Moq 단위 테스트 |
+
+---
 
 ## 🎮 Games
 
 | Game | Description | AI | Status |
 |------|-------------|----|--------|
-| Pattern Memory | 패턴 기억 게임 | No | ✅ Complete |
-| Minesweeper | 지뢰찾기 | No | ✅ Complete |
-| Sudoku | 스도쿠 퍼즐 | No | ✅ Complete |
-| Tetris | 테트리스 | No | ✅ Complete |
-| Gomoku | 오목 | Yes (Heuristic) | ✅ Complete |
-| Chess | 체스 | Yes (Minimax) | ✅ Complete |
+| Pattern Memory | 패턴 기억 게임 | ❌ | ✅ |
+| Minesweeper | 지뢰찾기 | ❌ | ✅ |
+| Sudoku | 스도쿠 퍼즐 | ❌ | ✅ |
+| Tetris | 테트리스 | ❌ | ✅ |
+| Gomoku | 오목 | ✅ Heuristic | ✅ |
+| Chess | 체스 | ✅ Minimax | ✅ |
+
+---
 
 ## 🏗️ Architecture
 
@@ -43,6 +68,8 @@ MiniGameCollection/
     └── Games.*.Tests/
 ```
 
+---
+
 ## 🚀 Quick Start
 
 ### Requirements
@@ -67,15 +94,18 @@ dotnet build MiniGameCollection.sln
 dotnet test MiniGameCollection.sln
 ```
 
+---
+
 ## 📋 Design Principles
 
 ### SOLID
+
 | Principle | Application |
 |-----------|-------------|
 | **SRP** | Logic, Validator, Evaluator 분리 |
 | **OCP** | 새 게임 추가 시 Core 수정 불필요 |
 | **LSP** | 모든 IGame 구현체 상호 교체 가능 |
-| **ISP** | IGame을 IGameInfo, IGameControllable, IGameSerializable, IGameEventEmitter로 분리 |
+| **ISP** | IGame 을 IGameInfo, IGameControllable, IGameSerializable, IGameEventEmitter 로 분리 |
 | **DIP** | 모든 의존성은 인터페이스를 통해 주입 |
 
 ### State Machine
@@ -87,11 +117,13 @@ None → Ready → Playing → Paused → Playing
                   Ready ←── Ready
 ```
 
+---
+
 ## 🤖 AI Systems
 
 ### Gomoku (오목)
 - **Heuristic-based AI** (15x15 보드에서 Minimax 비실용적)
-- 패턴 기반 점수 평가 (4연속, 3연속, open-end)
+- 패턴 기반 점수 평가 (4 연석, 3 연석, open-end)
 - 공격/방어 우선순위: 승리 > 차단 > 확장
 - 난이도: Easy / Normal / Hard (depth 1~3)
 
@@ -99,6 +131,8 @@ None → Ready → Playing → Paused → Playing
 - **Minimax with Alpha-Beta Pruning**
 - 난이도: Easy (depth 1) / Normal (depth 3) / Hard (depth 5)
 - Piece-square table + material evaluation
+
+---
 
 ## 🎯 Key Features
 
@@ -110,30 +144,20 @@ None → Ready → Playing → Paused → Playing
 - **Notes Mode** (Sudoku) - 메모 기능
 - **Difficulty Selector** (Sudoku, Gomoku, Chess)
 
-## 📁 Project Structure Details
+---
 
-### Core Module
-- `Interfaces/` - IGame (composite), IGameInfo, IGameControllable, IGameSerializable, IGameEventEmitter
-- `State/` - StateManager, IStateManager, IStateTransitionRule, DefaultStateTransitionRule
-- `Events/` - EventBus, GameEvent, ScoreChangedEvent, GameOverEvent, GameStateChangedEvent
-- `Data/` - SaveSystem, ISaveSystem, ISerializer, ISaveStorage, JsonSerializer, GameSettings
-- `DI/` - ServiceContainer, IServiceContainer
-- `AI/` - MinimaxAI, IAIPlayer, IGameStateEvaluator, AIPlayerFactory
+## 🛠️ Tech Stack
 
-### Game Modules
-각 게임은 다음 구조를 따름:
-```
-Games/[GameName]/
-├── [GameName]Game.cs          # IGame 구현체
-├── Logic/                     # 게임 로직
-├── Models/                    # 데이터 모델
-└── AI/                        # AI (있는 경우)
-```
+| Category | Technology |
+|----------|------------|
+| **Frontend** | Blazor WebAssembly |
+| **Language** | C# 12, .NET 8.0 |
+| **Architecture** | Component-based, DI |
+| **State Management** | Custom StateManager |
+| **Testing** | xUnit, Moq |
+| **CI/CD** | GitHub Actions, Vercel |
 
-### Web Module
-- `Pages/` - 각 게임별 Blazor 페이지
-- `Layout/` - MainLayout, NavMenu
-- `wwwroot/css/` - games.css (전체 게임 스타일), game-grid.css (홈 화면)
+---
 
 ## 📝 Development Phases
 
@@ -147,6 +171,8 @@ Games/[GameName]/
 | Phase 5 | Gomoku + AI | ✅ |
 | Phase 6 | Chess + AI | ✅ |
 | Phase 7 | Blazor UI | ✅ |
+
+---
 
 ## 📄 License
 

@@ -29,6 +29,17 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        // Handle SPA redirect from 404.html
+        const redirectPath = sessionStorage.getItem('blazor-spa-redirect');
+        if (redirectPath) {
+            sessionStorage.removeItem('blazor-spa-redirect');
+            // Navigate to the correct route after Blazor loads
+            window.addEventListener('load', function() {
+                history.replaceState(null, '', redirectPath);
+            });
+        }
+    </script>
 </body>
 
 </html>

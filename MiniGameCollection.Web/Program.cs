@@ -14,4 +14,9 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddScoped<IBrowserStorage, BrowserStorage>();
 builder.Services.AddScoped<IGameStateService, GameStateService>();
 
-await builder.Build().RunAsync();
+var app = builder.Build();
+
+// Fallback to index.html for SPA routing (prevents 404 on refresh)
+app.Services.GetService<IWebAssemblyHostEnvironment>();
+
+await app.RunAsync();
