@@ -1,8 +1,19 @@
 {
   "buildCommand": "dotnet publish MiniGameCollection.Web -c Release -o output",
   "outputDirectory": "output/wwwroot",
-  "installCommand": "echo skip",
+  "installCommand": "export DOTNET_VERSION=8.0 && dotnet --version",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/_framework/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
   ]
 }
