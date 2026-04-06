@@ -1,6 +1,7 @@
 {
-  "buildCommand": "./build.sh",
-  "outputDirectory": "output/wwwroot",
+  "buildCommand": null,
+  "outputDirectory": "MiniGameCollection.Web/wwwroot",
+  "installCommand": null,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
