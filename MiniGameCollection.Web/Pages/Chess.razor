@@ -47,7 +47,7 @@
                     var isLastMove = (lastMove.FromRow == r && lastMove.FromCol == c) ||
                                      (lastMove.ToRow == r && lastMove.ToCol == c);
                     var isValidTarget = validMoves.Any(m => m.Row == r && m.Col == c);
-                    
+
                     <div class="chess-cell @(isLight ? "light" : "dark") @(isSelected ? "selected" : "") @(isLastMove ? "last-move" : "") @(isValidTarget ? "valid-move" : "")"
                          @onclick="() => SelectSquare(r, c)">
                         @if (piece != null && piece.Type != PieceType.None)
@@ -63,7 +63,7 @@
             </div>
         }
     </div>
-    
+
     <div class="game-controls">
         @if (!game.IsPlaying)
         {
@@ -110,13 +110,13 @@ else
     private bool _flipBoard = false;
     private (int FromRow, int FromCol, int ToRow, int ToCol) lastMove = (-1, -1, -1, -1);
     private List<(int Row, int Col)> validMoves = new();
-    
+
     protected override void OnInitialized()
     {
         CreateGame();
         GameService.OnStateChanged += HandleStateChanged;
     }
-    
+
     private void CreateGame()
     {
         if (useAI)
@@ -135,26 +135,26 @@ else
         selectedCol = -1;
         GameService.StartGame(game);
         game.StartGame();
-        
+
         // Flip board so user's color is at bottom
         // AI is White → user is Black → flip (Black at bottom)
         // AI is Black → user is White → no flip (White at bottom)
         _flipBoard = useAI && game.AIIsWhite;
     }
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && !_aiFirstMoveDone && game != null && game.HasAI && game.IsPlaying)
         {
             // Wait a bit for state to settle
             await Task.Delay(500);
-            
+
             if (game.IsAITurn())
             {
                 _aiFirstMoveDone = true;
                 aiThinking = true;
                 StateHasChanged();
-                
+
                 await InvokeAsync(() =>
                 {
                     if (game != null)
@@ -170,12 +170,12 @@ else
                 });
             }
         }
-        
+
         await base.OnAfterRenderAsync(firstRender);
     }
-    
+
     private void HandleStateChanged() => InvokeAsync(StateHasChanged);
-    
+
     private string GetPieceSymbol(ChessPiece piece) => piece switch
     {
         { Type: PieceType.King, Color: PieceColor.White } => "♔",
@@ -192,19 +192,19 @@ else
         { Type: PieceType.Pawn, Color: PieceColor.Black } => "♟",
         _ => ""
     };
-    
+
     private void SelectSquare(int row, int col)
     {
         if (game == null || !game.IsPlaying || _isPaused) return;
-        
+
         // If it's AI's turn, ignore
         if (game.HasAI && game.IsAITurn()) return;
-        
+
         if (row < 0 || row >= 8 || col < 0 || col >= 8) return;
-        
+
         var piece = game.GetPiece(row, col);
         var myColor = game.IsWhiteTurn ? PieceColor.White : PieceColor.Black;
-        
+
         // If a piece is already selected
         if (selectedRow >= 0)
         {
@@ -219,13 +219,13 @@ else
                     selectedCol = -1;
                     validMoves.Clear();
                     StateHasChanged();
-                    
+
                     // AI's turn
                     if (game.HasAI && !game.IsGameOver && game.IsAITurn())
                     {
                         aiThinking = true;
                         StateHasChanged();
-                        
+
                         _ = Task.Run(async () =>
                         {
                             await Task.Delay(200);
@@ -247,7 +247,7 @@ else
                 }
                 return;
             }
-            
+
             // If clicking on own piece, reselect
             if (piece?.Color == myColor)
             {
@@ -257,7 +257,7 @@ else
                 StateHasChanged();
                 return;
             }
-            
+
             // Clicking on invalid target - deselect
             selectedRow = -1;
             selectedCol = -1;
@@ -276,7 +276,7 @@ else
             StateHasChanged();
         }
     }
-    
+
     private async void StartGame()
     {
         _aiFirstMoveDone = false;
@@ -287,12 +287,12 @@ else
         lastMove = (-1, -1, -1, -1);
         validMoves.Clear();
         StateHasChanged();
-        
+
         // Trigger AI first move
         await Task.Delay(300);
         await TriggerAIFirstMove();
     }
-    
+
     private void TogglePause()
     {
         if (_isPaused) game?.ResumeGame();
@@ -300,32 +300,32 @@ else
         _isPaused = !_isPaused;
         StateHasChanged();
     }
-    
+
     private async void ResetGame()
     {
         _aiFirstMoveDone = false;
         CreateGame();
         _isPaused = false;
         StateHasChanged();
-        
+
         // Trigger AI first move after reset
         await Task.Delay(300);
         await TriggerAIFirstMove();
     }
-    
+
     private async Task TriggerAIFirstMove()
     {
         if (_aiFirstMoveDone || game == null || !game.HasAI || !game.IsPlaying)
             return;
-        
+
         if (game.IsAITurn())
         {
             _aiFirstMoveDone = true;
             aiThinking = true;
             StateHasChanged();
-            
+
             await Task.Delay(200);
-            
+
             await InvokeAsync(() =>
             {
                 if (game != null)
@@ -341,7 +341,7 @@ else
             });
         }
     }
-    
+
     private void SetMode(bool ai)
     {
         useAI = ai;
@@ -349,7 +349,7 @@ else
         _isPaused = false;
         StateHasChanged();
     }
-    
+
     private void SetDifficulty(int depth)
     {
         _aiDepth = depth;
@@ -357,6 +357,6 @@ else
         _isPaused = false;
         StateHasChanged();
     }
-    
+
     public void Dispose() => GameService.OnStateChanged -= HandleStateChanged;
 }

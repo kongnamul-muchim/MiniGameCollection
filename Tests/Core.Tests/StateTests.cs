@@ -13,7 +13,7 @@ public class StateTests
         {
             var rule = new DefaultStateTransitionRule();
             var manager = new StateManager(rule);
-            
+
             Assert.Equal(GameState.None, manager.CurrentState);
         }
 
@@ -22,10 +22,10 @@ public class StateTests
         {
             var rule = new DefaultStateTransitionRule();
             var manager = new StateManager(rule);
-            
+
             manager.ChangeState(GameState.Ready);
             Assert.Equal(GameState.Ready, manager.CurrentState);
-            
+
             manager.ChangeState(GameState.Playing);
             Assert.Equal(GameState.Playing, manager.CurrentState);
         }
@@ -35,20 +35,20 @@ public class StateTests
         {
             var rule = new DefaultStateTransitionRule();
             var manager = new StateManager(rule);
-            
+
             GameState? previousState = null;
             GameState? newState = null;
             var eventFired = false;
-            
+
             manager.OnStateChanged += (prev, next) =>
             {
                 previousState = prev;
                 newState = next;
                 eventFired = true;
             };
-            
+
             manager.ChangeState(GameState.Ready);
-            
+
             Assert.True(eventFired);
             Assert.Equal(GameState.None, previousState);
             Assert.Equal(GameState.Ready, newState);
@@ -59,11 +59,11 @@ public class StateTests
         {
             var rule = new DefaultStateTransitionRule();
             var manager = new StateManager(rule);
-            
+
             Assert.False(manager.CanTransitionTo(GameState.Playing));
-            
+
             manager.ChangeState(GameState.Playing);
-            
+
             Assert.Equal(GameState.None, manager.CurrentState);
         }
 

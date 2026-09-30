@@ -44,7 +44,7 @@ public class GameControllableTests
         Assert.Equal(GameState.None, game.CurrentState);
         Assert.False(game.IsPlaying);
         Assert.False(game.IsPaused);
-        
+
         game.StartGame();
         Assert.Equal(GameState.Playing, game.CurrentState);
     }
@@ -54,7 +54,7 @@ public class GameControllableTests
         public GameState CurrentState { get; private set; } = GameState.None;
         public bool IsPlaying => CurrentState == GameState.Playing;
         public bool IsPaused => CurrentState == GameState.Paused;
-        
+
         public void StartGame() => CurrentState = GameState.Playing;
         public void PauseGame() => CurrentState = GameState.Paused;
         public void ResumeGame() => CurrentState = GameState.Playing;
@@ -123,9 +123,9 @@ public class GameTests
         public GameState CurrentState { get; private set; } = GameState.None;
         public bool IsPlaying => CurrentState == GameState.Playing;
         public bool IsPaused => CurrentState == GameState.Paused;
-        
+
         public event Action<GameEvent>? OnGameEvent;
-        
+
         public void StartGame() => CurrentState = GameState.Playing;
         public void PauseGame() => CurrentState = GameState.Paused;
         public void ResumeGame() => CurrentState = GameState.Playing;

@@ -13,7 +13,7 @@
             <span>Level: @currentLevel</span>
             <span>Score: @currentScore</span>
         </div>
-        
+
         <div class="pattern-grid">
             @for (int i = 0; i < 3; i++)
             {
@@ -27,7 +27,7 @@
                 }
             }
         </div>
-        
+
         <div class="game-controls">
             @if (!game.IsPlaying)
             {
@@ -39,7 +39,7 @@
                 <button class="btn btn-danger" @onclick="ResetGame">Reset</button>
             }
         </div>
-        
+
         @if (!string.IsNullOrEmpty(message))
         {
             <div class="game-message">@message</div>
@@ -61,7 +61,7 @@
     private List<int> currentPattern = new();
     private List<int> shownPattern = new();
     private int playerStep = 0;
-    
+
     protected override void OnInitialized()
     {
         var generator = new PatternGenerator(new Random());
@@ -72,9 +72,9 @@
         // Auto-start game on page enter
         StartGame();
     }
-    
+
     private void HandleStateChanged() => InvokeAsync(StateHasChanged);
-    
+
     private async void StartGame()
     {
         game?.StartGame();
@@ -84,13 +84,13 @@
         AddToPattern();
         await ShowPattern();
     }
-    
+
     private void AddToPattern()
     {
         var rnd = new Random();
         currentPattern.Add(rnd.Next(9));
     }
-    
+
     private async Task ShowPattern()
     {
         isShowingPattern = true;
@@ -109,7 +109,7 @@
         message = "Your turn!";
         StateHasChanged();
     }
-    
+
     private void TogglePause()
     {
         if (_isPaused) game?.ResumeGame();
@@ -117,7 +117,7 @@
         _isPaused = !_isPaused;
         StateHasChanged();
     }
-    
+
     private void ResetGame()
     {
         game?.ResetGame();
@@ -128,13 +128,13 @@
         shownPattern.Clear();
         StateHasChanged();
     }
-    
+
     private bool IsHighlighted(int index) => shownPattern.Contains(index);
-    
+
     private void HandleTileClick(int index)
     {
         if (isShowingPattern || !game.IsPlaying || playerStep >= currentPattern.Count) return;
-        
+
         if (index == currentPattern[playerStep])
         {
             playerStep++;
@@ -164,6 +164,6 @@
             StateHasChanged();
         }
     }
-    
+
     public void Dispose() => GameService.OnStateChanged -= HandleStateChanged;
 }

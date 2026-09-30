@@ -11,7 +11,7 @@ public class DataTests
         public void GameSettings_ShouldInitializeWithDefaults()
         {
             var settings = new GameSettings();
-            
+
             Assert.NotNull(settings.HighScores);
             Assert.NotNull(settings.GameProgress);
             Assert.Empty(settings.HighScores);
@@ -28,9 +28,9 @@ public class DataTests
         public void JsonSerializer_ShouldSerializeObject()
         {
             var data = new TestObject { Name = "Test", Value = 42 };
-            
+
             var json = _serializer.Serialize(data);
-            
+
             Assert.Contains("\"Name\"", json);
             Assert.Contains("\"Test\"", json);
             Assert.Contains("\"Value\"", json);
@@ -41,9 +41,9 @@ public class DataTests
         public void JsonSerializer_ShouldDeserializeObject()
         {
             var json = "{\"Name\":\"Test\",\"Value\":42}";
-            
+
             var result = _serializer.Deserialize<TestObject>(json);
-            
+
             Assert.Equal("Test", result.Name);
             Assert.Equal(42, result.Value);
         }
@@ -97,10 +97,10 @@ public class DataTests
         public async Task SaveSystem_ShouldSaveAndLoadGame()
         {
             var gameState = new TestGameState { Score = 100, Level = 5 };
-            
+
             await _saveSystem.SaveGameAsync("test", gameState);
             var loaded = await _saveSystem.LoadGameAsync<TestGameState>("test");
-            
+
             Assert.NotNull(loaded);
             Assert.Equal(100, loaded.Score);
             Assert.Equal(5, loaded.Level);
@@ -110,7 +110,7 @@ public class DataTests
         public async Task SaveSystem_ShouldReturnNullWhenNoSavedGame()
         {
             var loaded = await _saveSystem.LoadGameAsync<TestGameState>("nonexistent");
-            
+
             Assert.Null(loaded);
         }
 
@@ -118,9 +118,9 @@ public class DataTests
         public async Task SaveSystem_ShouldDetectSavedGame()
         {
             Assert.False(await _saveSystem.HasSavedGameAsync("test"));
-            
+
             await _saveSystem.SaveGameAsync("test", new TestGameState());
-            
+
             Assert.True(await _saveSystem.HasSavedGameAsync("test"));
         }
 

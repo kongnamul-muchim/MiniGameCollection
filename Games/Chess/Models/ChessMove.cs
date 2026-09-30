@@ -7,7 +7,7 @@ public class ChessMove
     public PieceType? Promotion { get; }
     public bool IsCastling { get; }
     public bool IsEnPassant { get; }
-    
+
     public ChessMove(Position from, Position to, PieceType? promotion = null, bool isCastling = false, bool isEnPassant = false)
     {
         From = from;

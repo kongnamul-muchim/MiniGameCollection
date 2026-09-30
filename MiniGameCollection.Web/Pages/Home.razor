@@ -26,12 +26,12 @@
         new GameInfo { Name = "Gomoku", Description = "Five in a row strategy game", Icon = "⚫", Url = "/gomoku" },
         new GameInfo { Name = "Chess", Description = "Classic strategy chess", Icon = "♟️", Url = "/chess" }
     };
-    
+
     private void NavigateToGame(string url)
     {
         Navigation.NavigateTo(url);
     }
-    
+
     private class GameInfo
     {
         public string Name { get; set; } = "";

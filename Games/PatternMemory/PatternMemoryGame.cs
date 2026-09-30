@@ -24,7 +24,7 @@ public class PatternMemoryGame : IGame
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
         _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
-        
+
         _stateManager.OnStateChanged += (prev, current) =>
         {
             var evt = new GameStateChangedEvent(prev, current);
@@ -75,7 +75,7 @@ public class PatternMemoryGame : IGame
     {
         var data = JsonSerializer.Deserialize<PatternMemorySaveData>(json);
         if (data == null) return;
-        
+
         _logic.ResetGame();
         _stateManager.ChangeState(data.State);
     }

@@ -14,12 +14,12 @@ public class CollisionChecker : ICollisionChecker
                 {
                     int boardRow = row + r;
                     int boardCol = col + c;
-                    
+
                     // Out of bounds
-                    if (boardRow < 0 || boardRow >= board.Rows || 
+                    if (boardRow < 0 || boardRow >= board.Rows ||
                         boardCol < 0 || boardCol >= board.Columns)
                         return false;
-                    
+
                     // Already filled
                     if (board.GetCell(boardRow, boardCol) != 0)
                         return false;

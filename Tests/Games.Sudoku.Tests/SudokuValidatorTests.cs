@@ -17,9 +17,9 @@ public class SudokuValidatorTests
     public void Validator_ShouldAcceptValidMove()
     {
         var board = new SudokuBoard();
-        
+
         var result = _validator.IsValidMove(board, 0, 0, 5);
-        
+
         Assert.True(result);
     }
 
@@ -28,9 +28,9 @@ public class SudokuValidatorTests
     {
         var board = new SudokuBoard();
         board.SetCell(0, 0, 5);
-        
+
         var result = _validator.IsValidMove(board, 0, 1, 5);
-        
+
         Assert.False(result);
     }
 
@@ -39,9 +39,9 @@ public class SudokuValidatorTests
     {
         var board = new SudokuBoard();
         board.SetCell(0, 0, 5);
-        
+
         var result = _validator.IsValidMove(board, 1, 0, 5);
-        
+
         Assert.False(result);
     }
 
@@ -50,9 +50,9 @@ public class SudokuValidatorTests
     {
         var board = new SudokuBoard();
         board.SetCell(0, 0, 5);
-        
+
         var result = _validator.IsValidMove(board, 1, 1, 5);
-        
+
         Assert.False(result);
     }
 
@@ -72,13 +72,13 @@ public class SudokuValidatorTests
             {2,8,7,4,1,9,6,3,5},
             {3,4,5,2,8,6,1,7,9}
         };
-        
+
         for (int r = 0; r < 9; r++)
             for (int c = 0; c < 9; c++)
                 board.SetCell(r, c, solvedGrid[r, c]);
-        
+
         var result = _validator.IsSolved(board);
-        
+
         Assert.True(result);
     }
 
@@ -86,13 +86,13 @@ public class SudokuValidatorTests
     public void Validator_ShouldRejectInvalidNumber()
     {
         var board = new SudokuBoard();
-        
+
         var result = _validator.IsValidMove(board, 0, 0, 0);
-        
+
         Assert.False(result);
 
         result = _validator.IsValidMove(board, 0, 0, 10);
-        
+
         Assert.False(result);
     }
 }

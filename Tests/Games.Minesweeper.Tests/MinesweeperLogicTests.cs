@@ -12,9 +12,9 @@ public class MinesweeperLogicTests
         var generator = new BoardGenerator(new Random(42));
         var revealer = new CellRevealer();
         var logic = new MinesweeperLogic(generator, revealer);
-        
+
         logic.Initialize(9, 9, 10);
-        
+
         Assert.NotNull(logic.Board);
     }
 
@@ -24,10 +24,10 @@ public class MinesweeperLogicTests
         var generator = new BoardGenerator(new Random(42));
         var revealer = new CellRevealer();
         var logic = new MinesweeperLogic(generator, revealer);
-        
+
         logic.Initialize(9, 9, 10);
         logic.RevealCell(0, 0);
-        
+
         Assert.True(logic.Board!.Cells[0, 0].IsRevealed);
     }
 
@@ -37,12 +37,12 @@ public class MinesweeperLogicTests
         var generator = new BoardGenerator(new Random(42));
         var revealer = new CellRevealer();
         var logic = new MinesweeperLogic(generator, revealer);
-        
+
         logic.Initialize(9, 9, 10);
         logic.ToggleFlag(0, 0);
-        
+
         Assert.True(logic.Board!.Cells[0, 0].IsFlagged);
-        
+
         logic.ToggleFlag(0, 0);
         Assert.False(logic.Board.Cells[0, 0].IsFlagged);
     }
@@ -53,9 +53,9 @@ public class MinesweeperLogicTests
         var generator = new BoardGenerator(new Random(42));
         var revealer = new CellRevealer();
         var logic = new MinesweeperLogic(generator, revealer);
-        
+
         logic.Initialize(9, 9, 10);
-        
+
         // Find a mine cell
         for (int r = 0; r < 9; r++)
         {

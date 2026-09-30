@@ -115,9 +115,9 @@
             // AI goes first - make AI move
             aiThinking = true;
             StateHasChanged();
-            
+
             await Task.Delay(300);
-            
+
             await InvokeAsync(() =>
             {
                 if (game != null)
@@ -132,7 +132,7 @@
                 StateHasChanged();
             });
         }
-        
+
         await base.OnAfterRenderAsync(firstRender);
     }
 
@@ -174,7 +174,7 @@
             {
                 aiThinking = true;
                 StateHasChanged();
-                
+
                 _ = Task.Run(async () =>
                 {
                     await Task.Delay(100);
@@ -202,7 +202,7 @@
         _paused = false;
         lastMove = (-1, -1);
         StateHasChanged();
-        
+
         // Trigger AI first move if needed
         _ = TriggerAIFirstMove();
     }
@@ -222,7 +222,7 @@
         CreateGame();
         _paused = false;
         StateHasChanged();
-        
+
         // Trigger AI first move if needed
         _ = TriggerAIFirstMove();
     }
@@ -233,7 +233,7 @@
         CreateGame();
         _paused = false;
         StateHasChanged();
-        
+
         // Trigger AI first move if needed
         _ = TriggerAIFirstMove();
     }
@@ -244,7 +244,7 @@
         CreateGame();
         _paused = false;
         StateHasChanged();
-        
+
         // Trigger AI first move if needed
         _ = TriggerAIFirstMove();
     }
@@ -253,14 +253,14 @@
     {
         if (game == null || !game.HasAI || !game.IsPlaying)
             return;
-        
+
         await Task.Delay(300);
-        
+
         if (game.IsAITurn() && !game.IsGameOver)
         {
             aiThinking = true;
             StateHasChanged();
-            
+
             await InvokeAsync(() =>
             {
                 if (game != null)

@@ -53,13 +53,13 @@ public class PatternMemoryLogic
         }
 
         _state.AddScore(_state.CurrentLevel * 10);
-        
+
         if (_state.CurrentLevel >= MaxLevel)
         {
             _state.SetVictory();
             return true;
         }
-        
+
         _state.CurrentLevel++;
         GenerateNewPattern();
         return true;

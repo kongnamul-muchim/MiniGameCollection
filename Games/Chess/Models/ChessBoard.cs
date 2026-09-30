@@ -4,13 +4,13 @@ public class ChessBoard : IChessBoard
 {
     public ChessPiece?[,] Cells { get; }
     public int Size => 8;
-    
+
     public ChessBoard()
     {
         Cells = new ChessPiece?[8, 8];
         SetupInitialPosition();
     }
-    
+
     private void SetupInitialPosition()
     {
         // White pieces (bottom)
@@ -24,7 +24,7 @@ public class ChessBoard : IChessBoard
         Cells[7, 7] = new ChessPiece(PieceType.Rook, PieceColor.White);
         for (int c = 0; c < 8; c++)
             Cells[6, c] = new ChessPiece(PieceType.Pawn, PieceColor.White);
-        
+
         // Black pieces (top)
         Cells[0, 0] = new ChessPiece(PieceType.Rook, PieceColor.Black);
         Cells[0, 1] = new ChessPiece(PieceType.Knight, PieceColor.Black);
@@ -37,20 +37,20 @@ public class ChessBoard : IChessBoard
         for (int c = 0; c < 8; c++)
             Cells[1, c] = new ChessPiece(PieceType.Pawn, PieceColor.Black);
     }
-    
+
     public virtual ChessPiece? GetPiece(int row, int col) => Cells[row, col];
-    
+
     public virtual void SetPiece(int row, int col, ChessPiece? piece)
     {
         if (row >= 0 && row < 8 && col >= 0 && col < 8)
             Cells[row, col] = piece;
     }
-    
+
     public void MovePiece(int fromRow, int fromCol, int toRow, int toCol)
     {
         Cells[toRow, toCol] = Cells[fromRow, fromCol];
         Cells[fromRow, fromCol] = null;
     }
-    
+
     public void Clear() => Array.Clear(Cells, 0, Cells.Length);
 }

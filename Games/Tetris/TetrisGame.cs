@@ -19,7 +19,7 @@ public class TetrisGame : IGame
     public bool IsPaused => _stateManager.CurrentState == GameState.Paused;
 
     public event Action<GameEvent>? OnGameEvent;
-    
+
     // Expose logic and board for web UI
     public TetrisLogic Logic => _logic;
     public Models.TetrisBoard? Board => _logic.Board;
@@ -33,7 +33,7 @@ public class TetrisGame : IGame
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
         _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
-        
+
         _stateManager.OnStateChanged += (prev, current) =>
         {
             var evt = new GameStateChangedEvent(prev, current);
@@ -63,12 +63,12 @@ public class TetrisGame : IGame
         _logic.StartGame();
         _stateManager.ChangeState(GameState.Ready);
     }
-    
+
     public bool MoveLeft() => _logic.MoveLeft();
     public bool MoveRight() => _logic.MoveRight();
     public bool MoveDown() => _logic.MoveDown();
     public bool Rotate() => _logic.Rotate();
-    
+
     public void Tick() => _logic.MoveDown();
 
     public void EndGame()

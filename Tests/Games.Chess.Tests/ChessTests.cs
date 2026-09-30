@@ -18,12 +18,12 @@ public class ChessBoardTests
     public void Board_ShouldSetupInitialPosition()
     {
         var board = new ChessBoard();
-        
+
         // Check white pieces
         Assert.NotNull(board.GetPiece(7, 4));
         Assert.Equal(PieceType.King, board.GetPiece(7, 4)!.Type);
         Assert.Equal(PieceColor.White, board.GetPiece(7, 4)!.Color);
-        
+
         // Check black pieces
         Assert.NotNull(board.GetPiece(0, 4));
         Assert.Equal(PieceType.King, board.GetPiece(0, 4)!.Type);
@@ -34,9 +34,9 @@ public class ChessBoardTests
     public void Board_ShouldMovePieces()
     {
         var board = new ChessBoard();
-        
+
         board.MovePiece(6, 4, 4, 4); // e4
-        
+
         Assert.Null(board.GetPiece(6, 4));
         Assert.NotNull(board.GetPiece(4, 4));
         Assert.Equal(PieceType.Pawn, board.GetPiece(4, 4)!.Type);
@@ -51,7 +51,7 @@ public class ChessValidatorTests
         var board = new ChessBoard();
         var validator = new Logic.ChessValidator();
         var move = new ChessMove(new Position(6, 4), new Position(4, 4)); // e4
-        
+
         Assert.True(validator.IsValidMove(board, move, PieceColor.White));
     }
 
@@ -61,7 +61,7 @@ public class ChessValidatorTests
         var board = new ChessBoard();
         var validator = new Logic.ChessValidator();
         var move = new ChessMove(new Position(7, 1), new Position(5, 2)); // Nf3
-        
+
         Assert.True(validator.IsValidMove(board, move, PieceColor.White));
     }
 
@@ -71,7 +71,7 @@ public class ChessValidatorTests
         var board = new ChessBoard();
         var validator = new Logic.ChessValidator();
         var move = new ChessMove(new Position(6, 4), new Position(6, 5)); // Invalid pawn move
-        
+
         Assert.False(validator.IsValidMove(board, move, PieceColor.White));
     }
 }
@@ -82,7 +82,7 @@ public class ChessLogicTests
     public void ChessLogic_ShouldInitialize()
     {
         var logic = new Logic.ChessLogic();
-        
+
         Assert.Equal(PieceColor.White, logic.CurrentColor);
         Assert.False(logic.IsGameOver);
     }
@@ -92,10 +92,10 @@ public class ChessLogicTests
     {
         var logic = new Logic.ChessLogic();
         logic.StartGame();
-        
+
         var move = new ChessMove(new Position(6, 4), new Position(4, 4));
         var result = logic.MakeMove(move);
-        
+
         Assert.True(result);
         Assert.Equal(PieceColor.Black, logic.CurrentColor);
     }
@@ -105,9 +105,9 @@ public class ChessLogicTests
     {
         var logic = new Logic.ChessLogic();
         logic.StartGame();
-        
+
         var move = logic.GetAIMove();
-        
+
         Assert.NotNull(move);
     }
 }
@@ -119,7 +119,7 @@ public class ChessGameTests
     {
         var logic = new Logic.ChessLogic();
         var game = new ChessGame(logic);
-        
+
         Assert.Equal("Chess", game.GameName);
         Assert.NotEmpty(game.GameDescription);
     }
@@ -129,9 +129,9 @@ public class ChessGameTests
     {
         var logic = new Logic.ChessLogic();
         var game = new ChessGame(logic);
-        
+
         game.StartGame();
-        
+
         Assert.Equal(GameState.Playing, game.CurrentState);
     }
 }

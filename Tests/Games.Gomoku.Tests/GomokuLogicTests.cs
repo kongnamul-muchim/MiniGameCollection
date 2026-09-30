@@ -11,9 +11,9 @@ public class GomokuLogicTests
     {
         var validator = new GomokuValidator();
         var logic = new GomokuLogic(validator);
-        
+
         logic.StartGame();
-        
+
         Assert.Equal(1, logic.CurrentPlayer);
         Assert.False(logic.IsGameOver);
     }
@@ -23,10 +23,10 @@ public class GomokuLogicTests
     {
         var validator = new GomokuValidator();
         var logic = new GomokuLogic(validator);
-        
+
         logic.StartGame();
         var result = logic.PlaceStone(7, 7);
-        
+
         Assert.True(result);
         Assert.Equal(2, logic.CurrentPlayer);
     }
@@ -36,11 +36,11 @@ public class GomokuLogicTests
     {
         var validator = new GomokuValidator();
         var logic = new GomokuLogic(validator);
-        
+
         logic.StartGame();
         logic.PlaceStone(7, 7);
         var result = logic.PlaceStone(7, 7);
-        
+
         Assert.False(result);
     }
 
@@ -49,9 +49,9 @@ public class GomokuLogicTests
     {
         var validator = new GomokuValidator();
         var logic = new GomokuLogic(validator);
-        
+
         logic.StartGame();
-        
+
         // Player 1: 5 stones
         logic.PlaceStone(7, 5);
         logic.PlaceStone(0, 0);
@@ -62,7 +62,7 @@ public class GomokuLogicTests
         logic.PlaceStone(7, 8);
         logic.PlaceStone(0, 3);
         logic.PlaceStone(7, 9);
-        
+
         Assert.True(logic.IsGameOver);
         Assert.Equal(1, logic.Winner);
     }
@@ -72,11 +72,11 @@ public class GomokuLogicTests
     {
         var validator = new GomokuValidator();
         var logic = new GomokuLogic(validator);
-        
+
         logic.StartGame();
-        
+
         var move = logic.GetAIMove();
-        
+
         Assert.NotNull(move);
         Assert.True(move.Row >= 0 && move.Row < 15);
         Assert.True(move.Column >= 0 && move.Column < 15);

@@ -10,7 +10,7 @@ public class PatternGeneratorTests
     {
         var generator = new PatternGenerator(new Random(42));
         var pattern = generator.GeneratePattern(5);
-        
+
         Assert.Equal(5, pattern.Count);
     }
 
@@ -19,7 +19,7 @@ public class PatternGeneratorTests
     {
         var generator = new PatternGenerator(new Random(42));
         var pattern = generator.GeneratePattern(10);
-        
+
         foreach (var num in pattern)
         {
             Assert.InRange(num, 0, 8);
@@ -31,10 +31,10 @@ public class PatternGeneratorTests
     {
         var gen1 = new PatternGenerator(new Random(42));
         var gen2 = new PatternGenerator(new Random(42));
-        
+
         var pattern1 = gen1.GeneratePattern(5);
         var pattern2 = gen2.GeneratePattern(5);
-        
+
         Assert.Equal(pattern1, pattern2);
     }
 }

@@ -19,7 +19,7 @@ public class SudokuGame : IGame
     public bool IsPaused => _stateManager.CurrentState == GameState.Paused;
 
     public event Action<GameEvent>? OnGameEvent;
-    
+
     // Expose logic for web UI access
     public SudokuLogic Logic => _logic;
     public Games.Sudoku.Models.SudokuBoard? Board => _logic.Board;
@@ -28,7 +28,7 @@ public class SudokuGame : IGame
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
         _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
-        
+
         _stateManager.OnStateChanged += (prev, current) =>
         {
             var evt = new Core.Events.GameStateChangedEvent(prev, current);

@@ -33,7 +33,7 @@ public class PatternMemoryGameTests
     public void StartGame_ShouldTransitionToPlaying()
     {
         _game.StartGame();
-        
+
         Assert.Equal(GameState.Playing, _game.CurrentState);
     }
 
@@ -42,7 +42,7 @@ public class PatternMemoryGameTests
     {
         _game.StartGame();
         _game.PauseGame();
-        
+
         Assert.True(_game.IsPaused);
     }
 
@@ -51,7 +51,7 @@ public class PatternMemoryGameTests
     {
         _game.StartGame();
         _game.ResetGame();
-        
+
         Assert.Equal(GameState.Ready, _game.CurrentState);
     }
 
@@ -60,9 +60,9 @@ public class PatternMemoryGameTests
     {
         GameEvent? receivedEvent = null;
         _game.OnGameEvent += e => receivedEvent = e;
-        
+
         _game.StartGame();
-        
+
         Assert.NotNull(receivedEvent);
     }
 }
