@@ -10,7 +10,7 @@ public class ChessLogic
     private readonly ChessState _state;
     private readonly MinimaxAI<ChessMove>? _ai;
     private readonly ChessEvaluator? _evaluator;
-    
+
     public ChessBoard Board { get; }
     public PieceColor CurrentColor => _state.CurrentColor;
     public bool IsGameOver => _state.IsGameOver;
@@ -23,7 +23,7 @@ public class ChessLogic
         _validator = new ChessValidator();
         _state = new ChessState();
         Board = new ChessBoard();
-        
+
         if (useAI)
         {
             _evaluator = new ChessEvaluator();
@@ -44,11 +44,11 @@ public class ChessLogic
         for (int r = 0; r < 8; r++)
             for (int c = 0; c < 8; c++)
                 Board.Cells[r, c] = newBoard.Cells[r, c];
-        
+
         _state.CurrentPlayer = 1;
         _state.IsGameOver = false;
         _state.Winner = null;
-        
+
         // Random first player for AI games
         if (HasAI)
         {
@@ -62,10 +62,10 @@ public class ChessLogic
     {
         if (_state.IsGameOver) return false;
         if (!_validator.IsValidMove(Board, move, _state.CurrentColor, _state)) return false;
-        
+
         // Check if move leaves own king in check
         if (WouldBeInCheck(move, _state.CurrentColor)) return false;
-        
+
         // Handle castling
         if (move.IsCastling)
         {
@@ -81,15 +81,15 @@ public class ChessLogic
                 Board.Cells[kingRow, 0] = null;
             }
         }
-        
+
         // Handle en passant capture
         if (move.IsEnPassant)
         {
             Board.Cells[move.From.Row, move.To.Column] = null;
         }
-        
+
         Board.MovePiece(move.From.Row, move.From.Column, move.To.Row, move.To.Column);
-        
+
         // Handle pawn promotion
         var movedPiece = Board.GetPiece(move.To.Row, move.To.Column);
         if (movedPiece?.Type == PieceType.Pawn)
@@ -100,7 +100,7 @@ public class ChessLogic
                 Board.Cells[move.To.Row, move.To.Column] = new ChessPiece(PieceType.Queen, movedPiece.Color);
             }
         }
-        
+
         // Update castling rights
         if (movedPiece?.Type == PieceType.King)
         {
@@ -127,7 +127,7 @@ public class ChessLogic
         if (move.To.Row == 7 && move.To.Column == 7) _state.WhiteKingSideCastle = false;
         if (move.To.Row == 0 && move.To.Column == 0) _state.BlackQueenSideCastle = false;
         if (move.To.Row == 0 && move.To.Column == 7) _state.BlackKingSideCastle = false;
-        
+
         // Update en passant target
         _state.EnPassantTarget = null;
         if (movedPiece?.Type == PieceType.Pawn && Math.Abs(move.To.Row - move.From.Row) == 2)
@@ -135,7 +135,7 @@ public class ChessLogic
             int epRow = (move.From.Row + move.To.Row) / 2;
             _state.EnPassantTarget = new Position(epRow, move.From.Column);
         }
-        
+
         // Check for checkmate
         var enemyColor = _state.CurrentColor == PieceColor.White ? PieceColor.Black : PieceColor.White;
         if (_validator.IsCheckmate(Board, enemyColor, _state))
@@ -143,7 +143,7 @@ public class ChessLogic
             _state.SetWinner(_state.CurrentPlayer);
             return true;
         }
-        
+
         // Check for stalemate
         if (_validator.IsStalemate(Board, enemyColor, _state))
         {
@@ -151,11 +151,11 @@ public class ChessLogic
             _state.Winner = null; // Draw
             return true;
         }
-        
+
         _state.SwitchPlayer();
         return true;
     }
-    
+
     private bool WouldBeInCheck(ChessMove move, PieceColor color)
     {
         // Clone board to avoid modifying the actual board
@@ -163,10 +163,10 @@ public class ChessLogic
         for (int r = 0; r < 8; r++)
             for (int c = 0; c < 8; c++)
                 tempBoard[r, c] = Board.Cells[r, c];
-        
+
         var piece = tempBoard[move.From.Row, move.From.Column];
         var captured = tempBoard[move.To.Row, move.To.Column];
-        
+
         // Handle en passant
         ChessPiece? epCaptured = null;
         if (move.IsEnPassant)
@@ -174,14 +174,14 @@ public class ChessLogic
             epCaptured = tempBoard[move.From.Row, move.To.Column];
             tempBoard[move.From.Row, move.To.Column] = null;
         }
-        
+
         tempBoard[move.To.Row, move.To.Column] = piece;
         tempBoard[move.From.Row, move.From.Column] = null;
-        
+
         var adapter = new TempBoardAdapter(tempBoard);
         return _validator.IsInCheck(adapter, color);
     }
-    
+
     /// <summary>
     /// Get all valid moves for a piece at the given position.
     /// Used by UI to highlight valid move targets.
@@ -191,9 +191,9 @@ public class ChessLogic
         var moves = new List<(int, int)>();
         var piece = Board.GetPiece(row, col);
         if (piece == null || piece.Color != _state.CurrentColor) return moves;
-        
+
         var validator = new ChessValidator();
-        
+
         for (int r = 0; r < 8; r++)
         {
             for (int c = 0; c < 8; c++)
@@ -205,19 +205,19 @@ public class ChessLogic
                 }
             }
         }
-        
+
         // Castling
         if (piece.Type == PieceType.King)
         {
             var ksMove = new ChessMove(new Position(row, col), new Position(row, 6), isCastling: true);
             if (validator.IsValidMove(Board, ksMove, _state.CurrentColor, _state) && !WouldBeInCheck(ksMove, _state.CurrentColor))
                 moves.Add((row, 6));
-            
+
             var qsMove = new ChessMove(new Position(row, col), new Position(row, 2), isCastling: true);
             if (validator.IsValidMove(Board, qsMove, _state.CurrentColor, _state) && !WouldBeInCheck(qsMove, _state.CurrentColor))
                 moves.Add((row, 2));
         }
-        
+
         // En passant
         if (piece.Type == PieceType.Pawn && _state.EnPassantTarget.HasValue)
         {
@@ -225,10 +225,10 @@ public class ChessLogic
             if (validator.IsValidMove(Board, epMove, _state.CurrentColor, _state) && !WouldBeInCheck(epMove, _state.CurrentColor))
                 moves.Add((_state.EnPassantTarget.Value.Row, _state.EnPassantTarget.Value.Column));
         }
-        
+
         return moves;
     }
-    
+
     /// <summary>
     /// Get AI move using Minimax.
     /// Falls back to random move if AI not available.
@@ -237,7 +237,7 @@ public class ChessLogic
     {
         if (_state.IsGameOver)
             return null;
-        
+
         // Try Minimax AI if available
         if (_ai != null && _evaluator != null)
         {
@@ -251,10 +251,10 @@ public class ChessLogic
                 // Fallback to random
             }
         }
-        
+
         return GetRandomMove();
     }
-    
+
     /// <summary>
     /// Check if it's currently AI's turn.
     /// </summary>
@@ -264,11 +264,11 @@ public class ChessLogic
         return (AIIsWhite && _state.CurrentColor == PieceColor.White) ||
                (!AIIsWhite && _state.CurrentColor == PieceColor.Black);
     }
-    
+
     private ChessMove? GetRandomMove()
     {
         var validMoves = new List<ChessMove>();
-        
+
         for (int r = 0; r < 8; r++)
         {
             for (int c = 0; c < 8; c++)
@@ -287,18 +287,18 @@ public class ChessLogic
                 }
             }
         }
-        
+
         if (validMoves.Count == 0) return null;
         return validMoves[new Random().Next(validMoves.Count)];
     }
-    
+
     private ChessAIState CreateAIState()
     {
         var boardArray = new ChessPiece?[8, 8];
         for (int r = 0; r < 8; r++)
             for (int c = 0; c < 8; c++)
                 boardArray[r, c] = Board.Cells[r, c];
-        
+
         return new ChessAIState(boardArray, _state.CurrentColor);
     }
 }
@@ -313,7 +313,7 @@ public class ChessAIState : IGameState
     public int CurrentPlayer => CurrentColor == PieceColor.White ? 1 : 2;
     public bool IsGameOver { get; private set; }
     public int? Winner { get; private set; }
-    
+
     public ChessAIState(ChessPiece?[,] board, PieceColor currentColor)
     {
         Board = board;
@@ -321,7 +321,7 @@ public class ChessAIState : IGameState
         IsGameOver = false;
         Winner = null;
     }
-    
+
     public void SetWinner(int player)
     {
         Winner = player;
@@ -335,7 +335,7 @@ public class ChessAIState : IGameState
 public class ChessEvaluator : IGameStateEvaluator<ChessMove>
 {
     private static readonly ChessValidator _validator = new();
-    
+
     // Piece values - tuned for stronger play
     private static readonly Dictionary<PieceType, int> PieceValues = new()
     {
@@ -346,7 +346,7 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
         { PieceType.Queen, 900 },
         { PieceType.King, 20000 }
     };
-    
+
     // Piece-square tables - tuned for strategic play
     private static readonly int[,] PawnTable = {
         { 0,  0,  0,  0,  0,  0,  0,  0},
@@ -358,7 +358,7 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
         { 5, 10, 10,-20,-20, 10, 10,  5},
         { 0,  0,  0,  0,  0,  0,  0,  0}
     };
-    
+
     private static readonly int[,] KnightTable = {
         {-50,-40,-30,-30,-30,-30,-40,-50},
         {-40,-20,  0,  0,  0,  0,-20,-40},
@@ -369,7 +369,7 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
         {-40,-20,  0,  5,  5,  0,-20,-40},
         {-50,-40,-30,-30,-30,-30,-40,-50}
     };
-    
+
     private static readonly int[,] BishopTable = {
         {-20,-10,-10,-10,-10,-10,-10,-20},
         {-10,  0,  0,  0,  0,  0,  0,-10},
@@ -380,7 +380,7 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
         {-10,  5,  0,  0,  0,  0,  5,-10},
         {-20,-10,-10,-10,-10,-10,-10,-20}
     };
-    
+
     private static readonly int[,] RookTable = {
         { 0,  0,  0,  0,  0,  0,  0,  0},
         { 5, 10, 10, 10, 10, 10, 10,  5},
@@ -391,7 +391,7 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
         {-5,  0,  0,  0,  0,  0,  0, -5},
         { 0,  0,  0,  5,  5,  0,  0,  0}
     };
-    
+
     private static readonly int[,] QueenTable = {
         {-20,-10,-10, -5, -5,-10,-10,-20},
         {-10,  0,  0,  0,  0,  0,  0,-10},
@@ -402,7 +402,7 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
         {-10,  0,  5,  0,  0,  0,  0,-10},
         {-20,-10,-10, -5, -5,-10,-10,-20}
     };
-    
+
     private static readonly int[,] KingMiddleTable = {
         {-30,-40,-40,-50,-50,-40,-40,-30},
         {-30,-40,-40,-50,-50,-40,-40,-30},
@@ -413,7 +413,7 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
         { 20, 20,  0,  0,  0,  0, 20, 20},
         { 20, 30, 10,  0,  0, 10, 30, 20}
     };
-    
+
     private static readonly int[,] KingEndTable = {
         {-50,-40,-30,-20,-20,-30,-40,-50},
         {-30,-20,-10,  0,  0,-10,-20,-30},
@@ -424,26 +424,26 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
         {-30,-30,  0,  0,  0,  0,-30,-30},
         {-50,-30,-30,-30,-30,-30,-30,-50}
     };
-    
+
     public int Evaluate(IGameState state)
     {
         var cs = (ChessAIState)state;
         return EvaluateBoard(cs.Board, cs.CurrentColor);
     }
-    
+
     private int EvaluateBoard(ChessPiece?[,] board, PieceColor perspective)
     {
         int score = 0;
-        
+
         for (int r = 0; r < 8; r++)
         {
             for (int c = 0; c < 8; c++)
             {
                 var piece = board[r, c];
                 if (piece == null) continue;
-                
+
                 int value = PieceValues.GetValueOrDefault(piece.Type, 0);
-                
+
                 // Add positional bonus
                 int posBonus = piece.Type switch
                 {
@@ -454,24 +454,24 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
                     PieceType.King => piece.Color == PieceColor.White ? KingMiddleTable[r, c] : KingMiddleTable[7 - r, c],
                     _ => 0
                 };
-                
+
                 int totalValue = value + posBonus;
-                
+
                 if (piece.Color == perspective)
                     score += totalValue;
                 else
                     score -= totalValue;
             }
         }
-        
+
         return score;
     }
-    
+
     public IEnumerable<ChessMove> GetValidMoves(IGameState state)
     {
         var cs = (ChessAIState)state;
         var moves = new List<(ChessMove Move, int Score)>();
-        
+
         for (int r = 0; r < 8; r++)
         {
             for (int c = 0; c < 8; c++)
@@ -493,14 +493,14 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
                             }
                         }
                     }
-                    
+
                     // Castling
                     if (cs.Board[r, c]!.Type == PieceType.King)
                     {
                         var ksMove = new ChessMove(new Position(r, c), new Position(r, 6), isCastling: true);
                         if (IsValidMoveForAI(cs.Board, ksMove, cs.CurrentColor))
                             moves.Add((ksMove, 60));
-                        
+
                         var qsMove = new ChessMove(new Position(r, c), new Position(r, 2), isCastling: true);
                         if (IsValidMoveForAI(cs.Board, qsMove, cs.CurrentColor))
                             moves.Add((qsMove, 60));
@@ -508,39 +508,39 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
                 }
             }
         }
-        
+
         // Sort by capture value (MVV-LVA) and take top candidates
         return moves
             .OrderByDescending(x => x.Score)
             .Take(20)
             .Select(x => x.Move);
     }
-    
+
     private bool IsValidMoveForAI(ChessPiece?[,] board, ChessMove move, PieceColor color)
     {
         var piece = board[move.From.Row, move.From.Column];
         if (piece == null || piece.Color != color) return false;
-        
+
         var target = board[move.To.Row, move.To.Column];
         if (target != null && target.Color == color) return false;
-        
+
         // Use validator logic
         var tempBoard = new TempBoardAdapter(board);
         return _validator.IsValidMove(tempBoard, move, color);
     }
-    
+
     public IGameState ApplyMove(IGameState state, ChessMove move)
     {
         var cs = (ChessAIState)state;
         var newBoard = new ChessPiece?[8, 8];
-        
+
         for (int r = 0; r < 8; r++)
             for (int c = 0; c < 8; c++)
                 newBoard[r, c] = cs.Board[r, c];
-        
+
         newBoard[move.To.Row, move.To.Column] = newBoard[move.From.Row, move.From.Column];
         newBoard[move.From.Row, move.From.Column] = null;
-        
+
         // Pawn promotion
         var movedPiece = newBoard[move.To.Row, move.To.Column];
         if (movedPiece?.Type == PieceType.Pawn)
@@ -551,7 +551,7 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
                 newBoard[move.To.Row, move.To.Column] = new ChessPiece(PieceType.Queen, movedPiece.Color);
             }
         }
-        
+
         var nextColor = cs.CurrentColor == PieceColor.White ? PieceColor.Black : PieceColor.White;
         return new ChessAIState(newBoard, nextColor);
     }
@@ -564,20 +564,20 @@ public class ChessEvaluator : IGameStateEvaluator<ChessMove>
 public class TempBoardAdapter : IChessBoard
 {
     private readonly ChessPiece?[,] _cells;
-    
+
     public int Size => 8;
-    
+
     public TempBoardAdapter(ChessPiece?[,] cells)
     {
         _cells = cells;
     }
-    
+
     public ChessPiece? GetPiece(int row, int col)
     {
         if (row < 0 || row >= 8 || col < 0 || col >= 8) return null;
         return _cells[row, col];
     }
-    
+
     public void SetPiece(int row, int col, ChessPiece? piece)
     {
         if (row >= 0 && row < 8 && col >= 0 && col < 8)

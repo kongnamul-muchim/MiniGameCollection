@@ -19,11 +19,11 @@ public class MinesweeperGame : IGame
     public bool IsPaused => _stateManager.CurrentState == GameState.Paused;
 
     public event Action<GameEvent>? OnGameEvent;
-    
+
     // Expose logic for web UI access
     public MinesweeperLogic Logic => _logic;
     public Models.MinesweeperBoard? Board => _logic.Board;
-    
+
     // Expose cell for web UI
     public Models.Cell? GetCell(int row, int col) => _logic.Board?.Cells[row, col];
     public int Rows => _logic.Board?.Rows ?? 9;
@@ -35,7 +35,7 @@ public class MinesweeperGame : IGame
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
         _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
-        
+
         _stateManager.OnStateChanged += (prev, current) =>
         {
             var evt = new GameStateChangedEvent(prev, current);

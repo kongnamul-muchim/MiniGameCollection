@@ -9,7 +9,7 @@ public class MinesweeperBoardTests
     public void Board_ShouldInitializeWithCorrectSize()
     {
         var board = new MinesweeperBoard(9, 9);
-        
+
         Assert.Equal(9, board.Rows);
         Assert.Equal(9, board.Columns);
         Assert.Equal(81, board.Cells.Length);
@@ -20,7 +20,7 @@ public class MinesweeperBoardTests
     {
         var board = new MinesweeperBoard(9, 9);
         var cell = board.Cells[3, 5];
-        
+
         Assert.Equal(3, cell.Row);
         Assert.Equal(5, cell.Column);
         Assert.False(cell.IsMine);

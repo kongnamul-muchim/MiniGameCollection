@@ -8,9 +8,9 @@ public class CellRevealer : ICellRevealer
     {
         var cell = board.Cells[row, col];
         if (cell.IsRevealed || cell.IsFlagged) return;
-        
+
         cell.IsRevealed = true;
-        
+
         // Expand if no adjacent mines
         if (cell.AdjacentMines == 0 && !cell.IsMine)
         {

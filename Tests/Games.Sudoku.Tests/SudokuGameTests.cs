@@ -27,7 +27,7 @@ public class SudokuGameTests
     public void StartGame_ShouldInitialize()
     {
         _game.StartGame();
-        
+
         Assert.Equal(GameState.Playing, _game.CurrentState);
     }
 
@@ -36,7 +36,7 @@ public class SudokuGameTests
     {
         _game.StartGame();
         _game.PauseGame();
-        
+
         Assert.True(_game.IsPaused);
     }
 
@@ -46,7 +46,7 @@ public class SudokuGameTests
         _game.StartGame();
         _game.PauseGame();
         _game.ResumeGame();
-        
+
         Assert.True(_game.IsPlaying);
     }
 }

@@ -53,7 +53,7 @@ public class MinimaxAI<TMove> : IAIPlayer<TMove>
         return bestMoves.Count == 1 ? bestMoves[0] : bestMoves[_random.Next(bestMoves.Count)];
     }
 
-    private int Minimax(IGameState state, IGameStateEvaluator<TMove> evaluator, 
+    private int Minimax(IGameState state, IGameStateEvaluator<TMove> evaluator,
         int depth, int alpha, int beta, bool isMaximizing)
     {
         if (depth == 0 || state.IsGameOver)

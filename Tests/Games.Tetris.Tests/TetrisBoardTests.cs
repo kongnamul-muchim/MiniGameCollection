@@ -9,7 +9,7 @@ public class TetrominoTests
     public void Tetromino_ShouldHaveCorrectShape()
     {
         var tetromino = new Tetromino(TetrominoType.I);
-        
+
         Assert.Equal(4, tetromino.Shape.GetLength(0));
         Assert.Equal(4, tetromino.Shape.GetLength(1));
     }
@@ -19,7 +19,7 @@ public class TetrominoTests
     {
         var tetromino = new Tetromino(TetrominoType.I);
         var rotated = tetromino.RotateClockwise();
-        
+
         Assert.NotNull(rotated.Shape);
     }
 
@@ -27,7 +27,7 @@ public class TetrominoTests
     public void Tetromino_ShouldHaveCorrectColor()
     {
         var tetromino = new Tetromino(TetrominoType.O);
-        
+
         Assert.Equal(2, tetromino.Color);
     }
 }
@@ -38,7 +38,7 @@ public class TetrisBoardTests
     public void Board_ShouldHaveCorrectDimensions()
     {
         var board = new TetrisBoard();
-        
+
         Assert.Equal(20, board.Rows);
         Assert.Equal(10, board.Columns);
     }
@@ -47,9 +47,9 @@ public class TetrisBoardTests
     public void Board_ShouldTrackFilledCells()
     {
         var board = new TetrisBoard();
-        
+
         board.SetCell(19, 0, 1);
-        
+
         Assert.Equal(1, board.Cells[19, 0]);
     }
 
@@ -57,10 +57,10 @@ public class TetrisBoardTests
     public void Board_ShouldDetectFullLine()
     {
         var board = new TetrisBoard();
-        
+
         for (int c = 0; c < 10; c++)
             board.SetCell(19, c, 1);
-        
+
         Assert.True(board.IsFullLine(19));
     }
 }

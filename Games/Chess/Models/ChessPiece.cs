@@ -7,7 +7,7 @@ public class ChessPiece
 {
     public PieceType Type { get; }
     public PieceColor Color { get; }
-    
+
     public ChessPiece(PieceType type, PieceColor color)
     {
         Type = type;
@@ -19,7 +19,7 @@ public struct Position
 {
     public int Row { get; }
     public int Column { get; }
-    
+
     public Position(int row, int column)
     {
         Row = row;

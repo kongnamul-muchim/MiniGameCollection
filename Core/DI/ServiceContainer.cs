@@ -6,7 +6,7 @@ public class ServiceContainer : IServiceContainer
     private readonly Dictionary<Type, object> _singletons = new();
     private readonly object _lock = new();
 
-    public void RegisterSingleton<TInterface, TImplementation>() 
+    public void RegisterSingleton<TInterface, TImplementation>()
         where TImplementation : class, TInterface
     {
         _registrations[typeof(TInterface)] = () =>
@@ -23,7 +23,7 @@ public class ServiceContainer : IServiceContainer
         };
     }
 
-    public void RegisterTransient<TInterface, TImplementation>() 
+    public void RegisterTransient<TInterface, TImplementation>()
         where TImplementation : class, TInterface
     {
         _registrations[typeof(TInterface)] = () => CreateInstance(typeof(TImplementation));
@@ -76,7 +76,7 @@ public class ServiceContainer : IServiceContainer
 
         var parameters = ctor.GetParameters();
         var args = new object[parameters.Length];
-        
+
         for (int i = 0; i < parameters.Length; i++)
         {
             var paramType = parameters[i].ParameterType;
@@ -90,7 +90,7 @@ public class ServiceContainer : IServiceContainer
                 args[i] = CreateInstance(paramType);
             }
         }
-        
+
         return ctor.Invoke(args);
     }
 }

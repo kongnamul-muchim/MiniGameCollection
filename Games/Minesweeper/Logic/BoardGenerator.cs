@@ -19,14 +19,14 @@ public class BoardGenerator : IBoardGenerator
         {
             int r = _random.Next(board.Rows);
             int c = _random.Next(board.Columns);
-            
+
             if (!board.Cells[r, c].IsMine)
             {
                 board.Cells[r, c].IsMine = true;
                 placed++;
             }
         }
-        
+
         // Calculate adjacent mines
         for (int r = 0; r < board.Rows; r++)
             for (int c = 0; c < board.Columns; c++)

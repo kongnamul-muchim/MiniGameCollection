@@ -11,13 +11,13 @@ public class SudokuSolverTests
     {
         var solver = new SudokuSolver();
         var board = new SudokuBoard();
-        
+
         // Invalid: duplicate in row
         board.SetCell(0, 0, 5);
         board.SetCell(0, 1, 5);
-        
+
         var result = solver.Solve(board);
-        
+
         Assert.False(result);
     }
 }

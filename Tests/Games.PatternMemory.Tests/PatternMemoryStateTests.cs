@@ -10,7 +10,7 @@ public class PatternMemoryStateTests
     public void State_ShouldInitializeWithDefaults()
     {
         var state = new PatternMemoryState();
-        
+
         Assert.Equal(1, state.CurrentLevel);
         Assert.Equal(0, state.PlayerScore);
         Assert.Equal(3, state.MistakesAllowed);
@@ -25,7 +25,7 @@ public class PatternMemoryStateTests
     {
         var state = new PatternMemoryState();
         state.SetPattern(new List<int> { 1, 2, 3 });
-        
+
         Assert.Equal(3, state.CurrentPattern.Count);
         Assert.Equal(1, state.CurrentPattern[0]);
     }
@@ -35,7 +35,7 @@ public class PatternMemoryStateTests
     {
         var state = new PatternMemoryState();
         state.SetMistakesAllowed(0);
-        
+
         Assert.True(state.IsGameOver);
     }
 
@@ -44,7 +44,7 @@ public class PatternMemoryStateTests
     {
         var state = new PatternMemoryState();
         state.SetVictory();
-        
+
         Assert.True(state.IsGameOver);
         Assert.Equal(1, state.Winner);
     }

@@ -19,7 +19,7 @@ public class ChessGame : IGame
     public bool IsPaused => _stateManager.CurrentState == GameState.Paused;
 
     public event Action<GameEvent>? OnGameEvent;
-    
+
     // Expose logic and board for web UI
     public ChessLogic Logic => _logic;
     public Models.ChessBoard Board => _logic.Board;
@@ -29,7 +29,7 @@ public class ChessGame : IGame
     public int? Winner => _logic.Winner;
     public bool HasAI => _logic.HasAI;
     public bool AIIsWhite => _logic.AIIsWhite;
-    
+
     public Models.ChessPiece? GetPiece(int row, int col) => _logic.Board.GetPiece(row, col);
     public List<(int Row, int Col)> GetValidMovesForPiece(int row, int col) => _logic.GetValidMovesForPiece(row, col);
     public bool MakeMove(int fromRow, int fromCol, int toRow, int toCol)
@@ -41,7 +41,7 @@ public class ChessGame : IGame
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
         _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
-        
+
         _stateManager.OnStateChanged += (prev, current) =>
         {
             var evt = new GameStateChangedEvent(prev, current);
@@ -58,23 +58,23 @@ public class ChessGame : IGame
 
     public void PauseGame() => _stateManager.ChangeState(GameState.Paused);
     public void ResumeGame() => _stateManager.ChangeState(GameState.Playing);
-    
+
     public void ResetGame()
     {
         _logic.StartGame();
         _stateManager.ChangeState(GameState.Ready);
     }
-    
+
     public bool MovePiece(int fromRow, int fromCol, int toRow, int toCol)
     {
         return MakeMove(fromRow, fromCol, toRow, toCol);
     }
-    
+
     /// <summary>
     /// Check if it's currently AI's turn.
     /// </summary>
     public bool IsAITurn() => _logic.IsAITurn();
-    
+
     /// <summary>
     /// Get AI's move and apply it.
     /// </summary>
@@ -82,15 +82,15 @@ public class ChessGame : IGame
     {
         if (!_logic.HasAI || _logic.IsGameOver || !IsPlaying)
             return null;
-        
+
         var move = _logic.GetAIMove();
         if (move == null)
             return null;
-        
+
         var result = MakeMove(move.From.Row, move.From.Column, move.To.Row, move.To.Column);
         return (result, move.From.Row, move.From.Column, move.To.Row, move.To.Column);
     }
-    
+
     public void EndGame() => _stateManager.ChangeState(GameState.GameOver);
 
     public string SerializeState() => JsonSerializer.Serialize(new { State = _stateManager.CurrentState });

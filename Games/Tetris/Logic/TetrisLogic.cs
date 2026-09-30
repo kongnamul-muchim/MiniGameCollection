@@ -8,7 +8,7 @@ public class TetrisLogic
     private readonly ICollisionChecker _checker;
     private readonly ILineClearer _clearer;
     private readonly TetrisState _state;
-    
+
     public TetrisBoard? Board { get; private set; }
     public Tetromino? CurrentPiece { get; private set; }
     public Tetromino? NextPiece { get; private set; }
@@ -29,7 +29,7 @@ public class TetrisLogic
         _state.Level = 1;
         _state.GameOver = false;
         _state.IsVictory = false;
-        
+
         Board = new TetrisBoard();
         SpawnPiece();
     }
@@ -38,7 +38,7 @@ public class TetrisLogic
     {
         CurrentPiece = _generator.Generate();
         NextPiece = _generator.GenerateNext();
-        
+
         if (!_checker.CanPlace(Board!, CurrentPiece, CurrentPiece.Row, CurrentPiece.Column))
             _state.SetGameOver();
     }
@@ -46,13 +46,13 @@ public class TetrisLogic
     public bool MoveDown()
     {
         if (CurrentPiece == null || Board == null) return false;
-        
+
         if (_checker.CanPlace(Board, CurrentPiece, CurrentPiece.Row + 1, CurrentPiece.Column))
         {
             CurrentPiece.Row++;
             return true;
         }
-        
+
         // Lock piece
         LockPiece();
         return false;
@@ -61,7 +61,7 @@ public class TetrisLogic
     public bool MoveLeft()
     {
         if (CurrentPiece == null || Board == null) return false;
-        
+
         if (_checker.CanPlace(Board, CurrentPiece, CurrentPiece.Row, CurrentPiece.Column - 1))
         {
             CurrentPiece.Column--;
@@ -73,7 +73,7 @@ public class TetrisLogic
     public bool MoveRight()
     {
         if (CurrentPiece == null || Board == null) return false;
-        
+
         if (_checker.CanPlace(Board, CurrentPiece, CurrentPiece.Row, CurrentPiece.Column + 1))
         {
             CurrentPiece.Column++;
@@ -85,7 +85,7 @@ public class TetrisLogic
     public bool Rotate()
     {
         if (CurrentPiece == null || Board == null) return false;
-        
+
         var rotated = CurrentPiece.RotateClockwise();
         if (_checker.CanPlace(Board, rotated, rotated.Row, rotated.Column))
         {
@@ -98,7 +98,7 @@ public class TetrisLogic
     private void LockPiece()
     {
         if (CurrentPiece == null || Board == null) return;
-        
+
         // Copy piece to board
         for (int r = 0; r < CurrentPiece.Shape.GetLength(0); r++)
         {
@@ -113,18 +113,18 @@ public class TetrisLogic
                 }
             }
         }
-        
+
         // Clear lines
         int lines = _clearer.ClearLines(Board);
         if (lines > 0)
         {
             _state.AddScore(lines * 100 * _state.Level);
             _state.IncrementLines();
-            
+
             if (_state.LinesCleared % 10 == 0)
                 _state.IncrementLevel();
         }
-        
+
         // Spawn next piece
         SpawnPiece();
     }

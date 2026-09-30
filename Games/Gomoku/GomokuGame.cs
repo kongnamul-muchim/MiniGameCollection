@@ -20,7 +20,7 @@ public class GomokuGame : IGame
     public bool IsPaused => _stateManager.CurrentState == GameState.Paused;
 
     public event Action<GameEvent>? OnGameEvent;
-    
+
     // Expose logic and board for web UI
     public GomokuLogic Logic => _logic;
     public GomokuBoard Board => _logic.Board;
@@ -36,14 +36,14 @@ public class GomokuGame : IGame
     {
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
         _stateManager = stateManager ?? new StateManager(new DefaultStateTransitionRule());
-        
+
         _stateManager.OnStateChanged += (prev, current) =>
         {
             var evt = new GameStateChangedEvent(prev, current);
             OnGameEvent?.Invoke(evt);
         };
     }
-    
+
     /// <summary>
     /// Create a new GomokuGame with AI opponent.
     /// </summary>
@@ -76,11 +76,11 @@ public class GomokuGame : IGame
         _logic.StartGame();
         _stateManager.ChangeState(GameState.Ready);
     }
-    
+
     public bool PlaceStone(int row, int col)
     {
         var result = _logic.PlaceStone(row, col);
-        
+
         // Check for game over
         if (_logic.IsGameOver && _logic.Winner.HasValue)
         {
@@ -89,15 +89,15 @@ public class GomokuGame : IGame
             else
                 _stateManager.ChangeState(GameState.GameOver);
         }
-        
+
         return result;
     }
-    
+
     /// <summary>
     /// Check if it's currently AI's turn.
     /// </summary>
     public bool IsAITurn() => _logic.IsAITurn();
-    
+
     /// <summary>
     /// Get AI's move and apply it.
     /// </summary>
@@ -105,15 +105,15 @@ public class GomokuGame : IGame
     {
         if (!_logic.HasAI || _logic.IsGameOver || !IsPlaying)
             return null;
-        
+
         var move = _logic.GetAIMove();
         if (move == null)
             return null;
-        
+
         var result = PlaceStone(move.Row, move.Column);
         return (result, move.Row, move.Column);
     }
-    
+
     /// <summary>
     /// Get AI's move and apply it.
     /// </summary>

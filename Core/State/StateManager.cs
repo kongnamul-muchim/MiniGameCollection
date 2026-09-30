@@ -8,7 +8,7 @@ public class StateManager : IStateManager
     private GameState _currentState = GameState.None;
 
     public GameState CurrentState => _currentState;
-    
+
     public event Action<GameState, GameState>? OnStateChanged;
 
     public StateManager(IStateTransitionRule transitionRule)
